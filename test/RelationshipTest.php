@@ -1,5 +1,9 @@
 <?php
 
+use ActiveRecord\HasManyThroughAssociationException;
+use ActiveRecord\RecordNotFound;
+use ActiveRecord\RelationshipException;
+
 class NotModel {};
 
 class AuthorWithNonModelRelationship extends ActiveRecord\Model
@@ -23,7 +27,7 @@ class RelationshipTest extends DatabaseTest
 		Venue::$has_one = [];
 		Employee::$has_one = [['position']];
 		Host::$has_many = [['events', 'order' => 'id asc']];
-		
+
 		foreach ($this->relationship_names as $name)
 		{
 			if (preg_match("/$name/", $this->getName(), $match))
@@ -72,31 +76,29 @@ class RelationshipTest extends DatabaseTest
 	{
 		$this->assert_default_has_many($this->get_relationship());
 	}
-	
+
 	public function test_gh_256_eager_loading_three_levels_deep()
 	{
 		/* Before fix Undefined offset: 0 */
 		$conditions['include'] = ['events'=>['host'=>['events']]];
 		$venue = Venue::find(2,$conditions);
-		
+
 		$events = $venue->events;
 		$this->assertEquals(2,count($events));
 		$event_yeah_yeahs = $events[0];
 		$this->assertEquals('Yeah Yeah Yeahs',$event_yeah_yeahs->title);
-		
+
 		$event_host = $event_yeah_yeahs->host;
 		$this->assertEquals('Billy Crystal',$event_host->name);
-		
+
 		$bill_events = $event_host->events;
-		
+
 		$this->assertEquals('Yeah Yeah Yeahs',$bill_events[0]->title);
 	}
-	
-	/**
-	 * @expectedException ActiveRecord\RelationshipException
-	 */
+
 	public function test_joins_on_model_via_undeclared_association()
 	{
+	$this->expectException(ActiveRecord\RelationshipException::class);
 		$x = JoinBook::first(['joins' => ['undeclared']]);
 	}
 
@@ -341,11 +343,9 @@ class RelationshipTest extends DatabaseTest
 		$this->assert_true($count >= 5);
 	}
 
-	/**
-	 * @expectedException ActiveRecord\HasManyThroughAssociationException
-	 */
 	public function test_has_many_through_no_association()
 	{
+	$this->expectException(ActiveRecord\HasManyThroughAssociationException::class);
 		Event::$belongs_to = [['host']];
 		Venue::$has_many[1] = ['hosts', 'through' => 'blahhhhhhh'];
 
@@ -383,11 +383,9 @@ class RelationshipTest extends DatabaseTest
 		$this->assert_true(count($venue->hostess) > 0);
 	}
 
-	/**
-	 * @expectedException ReflectionException
-	 */
 	public function test_has_many_through_with_invalid_class_name()
 	{
+	$this->expectException(ReflectionException::class);
 		Event::$belongs_to = [['host']];
 		Venue::$has_one = [['invalid_assoc']];
 		Venue::$has_many[1] = ['hosts', 'through' => 'invalid_assoc'];
@@ -519,11 +517,9 @@ class RelationshipTest extends DatabaseTest
 		$this->assert_true(count($venue->hosts) > 0);
 	}
 
-	/**
-	 * @expectedException ActiveRecord\RelationshipException
-	 */
 	public function test_throw_error_if_relationship_is_not_a_model()
 	{
+	$this->expectException(ActiveRecord\RelationshipException::class);
 		AuthorWithNonModelRelationship::first()->books;
 	}
 
@@ -717,11 +713,9 @@ class RelationshipTest extends DatabaseTest
 		$this->assert_equals($event->id, $event->venue->id);
 	}
 
-	/**
-	 * @expectedException ActiveRecord\RecordNotFound
-	 */
 	public function test_dont_attempt_eager_load_when_record_does_not_exist()
 	{
+	$this->expectException(ActiveRecord\RecordNotFound::class);
 		Author::find(999999, ['include' => ['books']]);
 	}
 
@@ -746,11 +740,9 @@ class RelationshipTest extends DatabaseTest
 		$event->venue->delete();
 	}
 
-	/**
-	 * @expectedException ActiveRecord\RelationshipException
-	 */
 	public function test_gh_125_auto_setter_for_relation_raises_exception()
 	{
+	$this->expectException(ActiveRecord\RelationshipException::class);
 		$event = new Event([
 			'venue' => new Book()
 		]);
@@ -795,12 +787,12 @@ class RelationshipTest extends DatabaseTest
 
 	public function test_through_association_name() {
 		$this->assert_equals('events',Venue::table()->get_relationship('hosts')->through_association_name());
-	}		
-	
+	}
+
 	public function test_through_association_name_on_non_has_many_through_association() {
 		$this->assert_null(Venue::table()->get_relationship('events')->through_association_name());
-	}	
-	
+	}
+
 	public function test_gh_87_has_many_through_with_joins() {
 		$v = Venue::first(['joins' => ['hosts']]);
 	}

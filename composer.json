@@ -12,7 +12,8 @@
         "phpunit/phpunit": "^13.4",
         "pear/pear_exception": "^1.0",
         "pear/log": "^1.14",
-        "rector/rector": "^2.8"
+        "rector/rector": "^2.8",
+        "symfony/var-dumper": "^8.1"
     },
     "autoload": {
         "files": [ "ActiveRecord.php" ]
