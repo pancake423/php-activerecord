@@ -58,7 +58,7 @@ ActiveRecord\Config::initialize(function($cfg): void
 	if (class_exists('Log_file')) // PEAR Log installed
 	{
 		$logger = new Log_file(__DIR__ . '/../log/query.log','ident',['mode' => 0664, 'timeFormat' =>  '%Y-%m-%d %H:%M:%S']);
-	
+
 		$cfg->set_logging(true);
 		$cfg->set_logger($logger);
 	}
@@ -69,7 +69,7 @@ ActiveRecord\Config::initialize(function($cfg): void
 
 		DatabaseTest::$log = false;
 	}
-	
+
 	if ($GLOBALS['show_warnings']  && !isset($GLOBALS['show_warnings_done']))
 	{
 		if (!extension_loaded('memcache'))
@@ -81,5 +81,5 @@ ActiveRecord\Config::initialize(function($cfg): void
 	$GLOBALS['show_warnings_done'] = true;
 });
 
-error_reporting(E_ALL | E_STRICT);
+error_reporting(E_ALL);
 ?>
