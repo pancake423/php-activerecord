@@ -33,7 +33,7 @@ namespace ActiveRecord;
  * @package ActiveRecord
  * @see http://php.net/manual/en/class.datetime.php
  */
-class DateTime extends \DateTime implements DateTimeLinkedModelInterface
+class DateTime extends \DateTime implements DateTimeLinkedModelInterface, \Stringable
 {
 	/**
 	 * Default format used for format() and __toString()
@@ -43,7 +43,7 @@ class DateTime extends \DateTime implements DateTimeLinkedModelInterface
 	/**
 	 * Pre-defined format strings.
 	 */
-	public static $FORMATS = array(
+	public static $FORMATS = [
 		'db'      => 'Y-m-d H:i:s',
 		'number'  => 'YmdHis',
 		'time'    => 'H:i',
@@ -59,7 +59,7 @@ class DateTime extends \DateTime implements DateTimeLinkedModelInterface
 		'rfc2822' => \DateTime::RFC2822,
 		'rfc3339' => \DateTime::RFC3339,
 		'rss'     => \DateTime::RSS,
-		'w3c'     => \DateTime::W3C);
+		'w3c'     => \DateTime::W3C];
 
 	private $model;
 	private $attribute_name;
@@ -128,7 +128,7 @@ class DateTime extends \DateTime implements DateTimeLinkedModelInterface
 		return $ourDate;
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->format();
 	}
@@ -142,24 +142,24 @@ class DateTime extends \DateTime implements DateTimeLinkedModelInterface
 	public function setDate($year, $month, $day)
 	{
 		$this->flag_dirty();
-		call_user_func_array(array($this,'parent::setDate'),func_get_args());
+		call_user_func_array([$this,'parent::setDate'],func_get_args());
 	}
 
 	public function setISODate($year, $week , $day=null)
 	{
 		$this->flag_dirty();
-		call_user_func_array(array($this,'parent::setISODate'),func_get_args());
+		call_user_func_array([$this,'parent::setISODate'],func_get_args());
 	}
 
 	public function setTime($hour, $minute, $second=null, $microsecond=null)
 	{
 		$this->flag_dirty();
-		call_user_func_array(array($this,'parent::setTime'),func_get_args());
+		call_user_func_array([$this,'parent::setTime'],func_get_args());
 	}
 
 	public function setTimestamp($unixtimestamp)
 	{
 		$this->flag_dirty();
-		call_user_func_array(array($this,'parent::setTimestamp'),func_get_args());
+		call_user_func_array([$this,'parent::setTimestamp'],func_get_args());
 	}
 }

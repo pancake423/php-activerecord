@@ -70,15 +70,15 @@ class DatabaseTest extends SnakeCase_PHPUnit_Framework_TestCase
 	 */
 	public function assert_sql_has($needle, $haystack)
 	{
-		$needle = str_replace(array('"','`'),'',$needle);
-		$haystack = str_replace(array('"','`'),'',$haystack);
+		$needle = str_replace(['"','`'],'',$needle);
+		$haystack = str_replace(['"','`'],'',$haystack);
 		return $this->assertContains($needle, $haystack);
 	}
 
 	public function assert_sql_doesnt_has($needle, $haystack)
 	{
-		$needle = str_replace(array('"','`'),'',$needle);
-		$haystack = str_replace(array('"','`'),'',$haystack);
+		$needle = str_replace(['"','`'],'',$needle);
+		$haystack = str_replace(['"','`'],'',$haystack);
 		return $this->assertNotContains($needle, $haystack);
 	}
 }

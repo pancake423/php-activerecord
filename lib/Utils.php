@@ -82,7 +82,7 @@ function is_hash(&$array)
 function denamespace($class_name)
 {
 	if (is_object($class_name))
-		$class_name = get_class($class_name);
+		$class_name = $class_name::class;
 
 	if (has_namespace($class_name))
 	{
@@ -101,14 +101,14 @@ function get_namespaces($class_name)
 
 function has_namespace($class_name)
 {
-	if (strpos($class_name, '\\') !== false)
+	if (str_contains($class_name, '\\'))
 		return true;
 	return false;
 }
 
 function has_absolute_namespace($class_name)
 {
-	if (strpos($class_name, '\\') === 0)
+	if (str_starts_with($class_name, '\\'))
 		return true;
 	return false;
 }
@@ -121,17 +121,12 @@ function has_absolute_namespace($class_name)
  */
 function all($needle, array $haystack)
 {
-	foreach ($haystack as $value)
-	{
-		if ($value !== $needle)
-			return false;
-	}
-	return true;
+    return array_all($haystack, fn($value) => !($value !== $needle));
 }
 
 function collect(&$enumerable, $name_or_closure)
 {
-	$ret = array();
+	$ret = [];
 
 	foreach ($enumerable as $value)
 	{
@@ -149,13 +144,13 @@ function collect(&$enumerable, $name_or_closure)
 function wrap_strings_in_arrays(&$strings)
 {
 	if (!is_array($strings))
-		$strings = array(array($strings));
+		$strings = [[$strings]];
 	else 
 	{
 		foreach ($strings as &$str)
 		{
 			if (!is_array($str))
-				$str = array($str);
+				$str = [$str];
 		}
 	}
 	return $strings;
@@ -170,10 +165,10 @@ class Utils
 {
 	public static function extract_options($options)
 	{
-		return is_array(end($options)) ? end($options) : array();
+		return is_array(end($options)) ? end($options) : [];
 	}
 
-	public static function add_condition(&$conditions=array(), $condition, $conjuction='AND')
+	public static function add_condition(&$conditions=[], $condition = null, $conjuction='AND')
 	{
 		if (is_array($condition))
 		{
@@ -223,7 +218,7 @@ class Utils
 		return 0 === strlen($var);
 	}
 
-	private static $plural = array(
+	private static $plural = [
         '/(quiz)$/i'               => "$1zes",
         '/^(ox)$/i'                => "$1en",
         '/([m|l])ouse$/i'          => "$1ice",
@@ -243,9 +238,9 @@ class Utils
         '/(us)$/i'                 => "$1es",
         '/s$/i'                    => "s",
         '/$/'                      => "s"
-    );
+    ];
 
-    private static $singular = array(
+    private static $singular = [
         '/(quiz)zes$/i'             => "$1",
         '/(matr)ices$/i'            => "$1ix",
         '/(vert|ind)ices$/i'        => "$1ex",
@@ -275,9 +270,9 @@ class Utils
         '/(us)es$/i'                => "$1",
         '/(us|ss)$/i'               => "$1",
         '/s$/i'                     => ""
-    );
+    ];
 
-    private static $irregular = array(
+    private static $irregular = [
         'move'   => 'moves',
         'foot'   => 'feet',
         'goose'  => 'geese',
@@ -286,9 +281,9 @@ class Utils
         'man'    => 'men',
         'tooth'  => 'teeth',
         'person' => 'people'
-    );
+    ];
 
-    private static $uncountable = array(
+    private static $uncountable = [
         'sheep',
         'fish',
         'deer',
@@ -298,7 +293,7 @@ class Utils
         'rice',
         'information',
         'equipment'
-    );
+    ];
 
     public static function pluralize( $string )
     {

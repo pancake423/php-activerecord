@@ -48,7 +48,7 @@ class Config extends Singleton
 	 *
 	 * @var array
 	 */
-	private $connections = array();
+	private $connections = [];
 
 	/**
 	 * Directory for the auto_loading of model classes.
@@ -85,7 +85,7 @@ class Config extends Singleton
 	 *
 	 * @var string
 	 */
-	private $date_class = 'ActiveRecord\\DateTime';
+	private $date_class = \ActiveRecord\DateTime::class;
 
 	/**
 	 * The format to serialize DateTime values into.
@@ -302,7 +302,7 @@ class Config extends Singleton
 	{
 		try {
 			$klass = Reflections::instance()->add($date_class)->get($date_class);
-		} catch (\ReflectionException $e) {
+		} catch (\ReflectionException) {
 			throw new ConfigException("Cannot find date class");
 		}
 
@@ -354,7 +354,7 @@ class Config extends Singleton
 	 * @param string $url Url to your cache server.
 	 * @param array $options Array of options
 	 */
-	public function set_cache($url, $options=array())
+	public function set_cache($url, $options=[])
 	{
 		Cache::initialize($url,$options);
 	}

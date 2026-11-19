@@ -78,7 +78,7 @@ class OciAdapter extends Connection
 			"INNER JOIN user_tab_columns c on(t.table_name=c.table_name) " .
 			"WHERE t.table_name=?";
 
-		$values = array(strtoupper($table));
+		$values = [strtoupper($table)];
 		return $this->query($sql,$values);
 	}
 
@@ -128,19 +128,19 @@ class OciAdapter extends Connection
 
 	public function native_database_types()
 	{
-		return array(
+		return [
 			'primary_key' => "NUMBER(38) NOT NULL PRIMARY KEY",
-			'string' => array('name' => 'VARCHAR2', 'length' => 255),
-			'text' => array('name' => 'CLOB'),
-			'integer' => array('name' => 'NUMBER', 'length' => 38),
-			'float' => array('name' => 'NUMBER'),
-			'datetime' => array('name' => 'DATE'),
-			'timestamp' => array('name' => 'DATE'),
-			'time' => array('name' => 'DATE'),
-			'date' => array('name' => 'DATE'),
-			'binary' => array('name' => 'BLOB'),
-			'boolean' => array('name' => 'NUMBER', 'length' => 1)
-		);
+			'string' => ['name' => 'VARCHAR2', 'length' => 255],
+			'text' => ['name' => 'CLOB'],
+			'integer' => ['name' => 'NUMBER', 'length' => 38],
+			'float' => ['name' => 'NUMBER'],
+			'datetime' => ['name' => 'DATE'],
+			'timestamp' => ['name' => 'DATE'],
+			'time' => ['name' => 'DATE'],
+			'date' => ['name' => 'DATE'],
+			'binary' => ['name' => 'BLOB'],
+			'boolean' => ['name' => 'NUMBER', 'length' => 1]
+		];
 	}
 }
 ?>

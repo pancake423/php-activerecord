@@ -1,21 +1,16 @@
 <?php
 class DatabaseLoader
 {
-	private $db;
-	static $instances = array();
+	static $instances = [];
 
-	public function __construct($db)
+	public function __construct(private $db)
 	{
-		$this->db = $db;
-
-		if (!isset(static::$instances[$db->protocol]))
-			static::$instances[$db->protocol] = 0;
-
-		if (static::$instances[$db->protocol]++ == 0)
+		static::$instances[$this->db->protocol] ??= 0;
+        if (static::$instances[$this->db->protocol]++ == 0)
 		{
 			// drop and re-create the tables one time only
 			$this->drop_tables();
-			$this->exec_sql_script($db->protocol);
+			$this->exec_sql_script($this->db->protocol);
 		}
 	}
 
@@ -33,7 +28,7 @@ class DatabaseLoader
 		$after_fixtures = $this->db->protocol.'-after-fixtures';
 		try {
 			$this->exec_sql_script($after_fixtures);
-		} catch (Exception $e) {
+		} catch (Exception) {
 			// pass
 		}
 	}
@@ -59,7 +54,7 @@ class DatabaseLoader
 			{
 				try {
 					$this->db->query("DROP SEQUENCE {$table}_seq");
-				} catch (ActiveRecord\DatabaseException $e) {
+				} catch (ActiveRecord\DatabaseException) {
 					// ignore
 				}
 			}
@@ -77,7 +72,7 @@ class DatabaseLoader
 
 	public function get_fixture_tables()
 	{
-		$tables = array();
+		$tables = [];
 
 		foreach (glob(__DIR__ . '/../fixtures/*.csv') as $file)
 		{
@@ -101,19 +96,19 @@ class DatabaseLoader
 	public function load_fixture_data($table)
 	{
 		$fp = fopen(__DIR__ . "/../fixtures/$table.csv",'r');
-		$fields = fgetcsv($fp);
+		$fields = fgetcsv($fp, escape: '\\');
 
 		if (!empty($fields))
 		{
-			$markers = join(',',array_fill(0,count($fields),'?'));
+			$markers = implode(',',array_fill(0,count($fields),'?'));
 			$table = $this->quote_name($table);
 
 			foreach ($fields as &$name)
 				$name = $this->quote_name(trim($name));
 
-			$fields = join(',',$fields);
+			$fields = implode(',',$fields);
 
-			while (($values = fgetcsv($fp)))
+			while (($values = fgetcsv($fp, escape: '\\')))
 				$this->db->query("INSERT INTO $table($fields) VALUES($markers)",$values);
 		}
 		fclose($fp);

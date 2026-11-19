@@ -204,7 +204,7 @@ class AdapterTest extends DatabaseTest
 	{
 		$sth = $this->conn->query('SELECT * FROM authors WHERE author_id IN(1,2,3)');
 		$i = 0;
-		$ids = array();
+		$ids = [];
 
 		while (($row = $sth->fetch()))
 		{
@@ -213,12 +213,12 @@ class AdapterTest extends DatabaseTest
 		}
 
 		$this->assert_equals(3,$i);
-		$this->assert_equals(array(1,2,3),$ids);
+		$this->assert_equals([1,2,3],$ids);
 	}
 
 	public function test_query_with_params()
 	{
-		$x=array('Bill Clinton','Tito');
+		$x=['Bill Clinton','Tito'];
 		$sth = $this->conn->query('SELECT * FROM authors WHERE name IN(?,?) ORDER BY name DESC',$x);
 		$row = $sth->fetch();
 		$this->assert_equals('Tito',$row['name']);
@@ -244,7 +244,7 @@ class AdapterTest extends DatabaseTest
 
 	public function test_insert_id_with_params()
 	{
-		$x = array('name');
+		$x = ['name'];
 		$this->conn->query('INSERT INTO authors(name) VALUES(?)',$x);
 		$this->assert_true($this->conn->insert_id() > 0);
 	}
@@ -264,10 +264,10 @@ class AdapterTest extends DatabaseTest
 	public function test_columnsx()
 	{
 		$columns = $this->conn->columns('authors');
-		$names = array('author_id','parent_author_id','name','updated_at','created_at','some_Date','some_time','some_text','encrypted_password','mixedCaseField');
+		$names = ['author_id','parent_author_id','name','updated_at','created_at','some_Date','some_time','some_text','encrypted_password','mixedCaseField'];
 
 		if ($this->conn instanceof ActiveRecord\OciAdapter)
-			$names = array_filter(array_map('strtolower',$names),function($s) { return $s !== 'some_time'; });
+			$names = array_filter(array_map(strtolower(...),$names),fn($s) => $s !== 'some_time');
 
 		foreach ($names as $field)
 			$this->assert_true(array_key_exists($field,$columns));
@@ -295,35 +295,35 @@ class AdapterTest extends DatabaseTest
 
 	private function limit($offset, $limit)
 	{
-		$ret = array();
+		$ret = [];
 		$sql = 'SELECT * FROM authors ORDER BY name ASC';
-		$this->conn->query_and_fetch($this->conn->limit($sql,$offset,$limit),function($row) use (&$ret) { $ret[] = $row; });
+		$this->conn->query_and_fetch($this->conn->limit($sql,$offset,$limit),function($row) use (&$ret): void { $ret[] = $row; });
 		return ActiveRecord\collect($ret,'author_id');
 	}
 
 	public function test_limit()
 	{
-		$this->assert_equals(array(2,1),$this->limit(1,2));
+		$this->assert_equals([2,1],$this->limit(1,2));
 	}
 
 	public function test_limit_to_first_record()
 	{
-		$this->assert_equals(array(3),$this->limit(0,1));
+		$this->assert_equals([3],$this->limit(0,1));
 	}
 
 	public function test_limit_to_last_record()
 	{
-		$this->assert_equals(array(1),$this->limit(2,1));
+		$this->assert_equals([1],$this->limit(2,1));
 	}
 
 	public function test_limit_with_null_offset()
 	{
-		$this->assert_equals(array(3),$this->limit(null,1));
+		$this->assert_equals([3],$this->limit(null,1));
 	}
 
 	public function test_limit_with_nulls()
 	{
-		$this->assert_equals(array(),$this->limit(null,null));
+		$this->assert_equals([],$this->limit(null,null));
 	}
 
 	public function test_fetch_no_results()
@@ -389,7 +389,7 @@ class AdapterTest extends DatabaseTest
 	{
 		$c = $this->conn;
 		$q = $c::$QUOTE_CHARACTER;
-		$qn = function($s) use ($c) { return $c->quote_name($s); };
+		$qn = (fn($s) => $c->quote_name($s));
 
 		$this->assert_equals("{$q}string", $qn("{$q}string"));
 		$this->assert_equals("string{$q}", $qn("string{$q}"));

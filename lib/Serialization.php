@@ -40,10 +40,9 @@ use XmlWriter;
  * @package ActiveRecord
  * @link http://www.phpactiverecord.org/guides/utilities#topic-serialization
  */
-abstract class Serialization
+abstract class Serialization implements \Stringable
 {
 	protected $model;
-	protected $options;
 	protected $attributes;
 
 	/**
@@ -93,10 +92,9 @@ abstract class Serialization
 	 * @param array &$options Options for serialization
 	 * @return Serialization
 	 */
-	public function __construct(Model $model, &$options)
+	public function __construct(Model $model, protected $options)
 	{
 		$this->model = $model;
-		$this->options = $options;
 		$this->attributes = $model->attributes();
 		$this->parse_options();
 	}
@@ -160,14 +158,14 @@ abstract class Serialization
 		{
 			$this->options_to_a('include');
 
-			$serializer_class = get_class($this);
+			$serializer_class = static::class;
 
 			foreach ($this->options['include'] as $association => $options)
 			{
 				if (!is_array($options))
 				{
 					$association = $options;
-					$options = array();
+					$options = [];
 				}
 
 				try {
@@ -187,14 +185,14 @@ abstract class Serialization
 					}
 					else
 					{
-						$includes = array();
+						$includes = [];
 
 						foreach ($assoc as $a)
 						{
 							$serialized = new $serializer_class($a, $options);
 
 							if ($this->includes_with_class_name_element)
-								$includes[strtolower(get_class($a))][] = $serialized->to_a();
+								$includes[strtolower($a::class)][] = $serialized->to_a();
 							else
 								$includes[] = $serialized->to_a();
 						}
@@ -202,7 +200,7 @@ abstract class Serialization
 						$this->attributes[$association] = $includes;
 					}
 
-				} catch (UndefinedPropertyException $e) {
+				} catch (UndefinedPropertyException) {
 					;//move along
 				}
 			}
@@ -212,7 +210,7 @@ abstract class Serialization
 	final protected function options_to_a($key)
 	{
 		if (!is_array($this->options[$key]))
-			$this->options[$key] = array($this->options[$key]);
+			$this->options[$key] = [$this->options[$key]];
 	}
 
 	/**
@@ -235,7 +233,7 @@ abstract class Serialization
 	 * @see to_s
 	 * @return string
 	 */
-	final public function __toString()
+	final public function __toString(): string
 	{
 		return $this->to_s();
 	}
@@ -258,7 +256,7 @@ class ArraySerializer extends Serialization
 
 	public function to_s()
 	{
-		return self::$include_root ? array(strtolower(get_class($this->model)) => $this->to_a()) : $this->to_a();
+		return self::$include_root ? [strtolower($this->model::class) => $this->to_a()] : $this->to_a();
 	}
 }
 
@@ -370,7 +368,7 @@ class CsvSerializer extends Serialization
   private function to_csv($arr)
   {
     $outstream = fopen('php://temp', 'w');
-    fputcsv($outstream, $arr, self::$delimiter, self::$enclosure);
+    fputcsv($outstream, $arr, self::$delimiter, self::$enclosure, escape: '\\');
     rewind($outstream);
     $buffer = trim(stream_get_contents($outstream));
     fclose($outstream);

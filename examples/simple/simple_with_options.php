@@ -16,13 +16,13 @@ class Book extends ActiveRecord\Model
 	static $db = 'test';
 }
 
-$connections = array(
+$connections = [
 	'development' => 'mysql://invalid',
 	'production' => 'mysql://test:test@127.0.0.1/test'
-);
+];
 
 // initialize ActiveRecord
-ActiveRecord\Config::initialize(function($cfg) use ($connections)
+ActiveRecord\Config::initialize(function($cfg) use ($connections): void
 {
     $cfg->set_model_directory('.');
     $cfg->set_connections($connections);

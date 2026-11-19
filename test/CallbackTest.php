@@ -22,11 +22,11 @@ class CallBackTest extends DatabaseTest
 
 	public function assert_implicit_save($first_method, $second_method)
 	{
-		$i_ran = array();
-		$this->callback->register($first_method,function($model) use (&$i_ran, $first_method) { $i_ran[] = $first_method; });
-		$this->callback->register($second_method,function($model) use (&$i_ran, $second_method) { $i_ran[] = $second_method; });
+		$i_ran = [];
+		$this->callback->register($first_method,function($model) use (&$i_ran, $first_method): void { $i_ran[] = $first_method; });
+		$this->callback->register($second_method,function($model) use (&$i_ran, $second_method): void { $i_ran[] = $second_method; });
 		$this->callback->invoke(null,$second_method);
-		$this->assert_equals(array($first_method,$second_method),$i_ran);
+		$this->assert_equals([$first_method,$second_method],$i_ran);
 	}
 
 	public function test_gh_266_calling_save_in_after_save_callback_uses_update_instead_of_insert()
@@ -36,10 +36,10 @@ class CallBackTest extends DatabaseTest
 		$venue->city = 'Awesome City';
 		$venue->save();
 		
-		$this->assert_true(VenueAfterCreate::exists(array('conditions'=>
-		     array('name'=>'changed!'))));
-		$this->assert_false(VenueAfterCreate::exists(array('conditions'=>
-		     array('name'=>'change me'))));
+		$this->assert_true(VenueAfterCreate::exists(['conditions'=>
+		     ['name'=>'changed!']]));
+		$this->assert_false(VenueAfterCreate::exists(['conditions'=>
+		     ['name'=>'change me']]));
 	}
 	
 	public function test_generic_callback_was_auto_registered()
@@ -83,7 +83,7 @@ class CallBackTest extends DatabaseTest
 
 	public function test_register_with_closure()
 	{
-		$this->callback->register('after_construct',function($mode) { });
+		$this->callback->register('after_construct',function($mode): void { });
 	}
 
 	public function test_register_with_null_definition()
@@ -102,14 +102,14 @@ class CallBackTest extends DatabaseTest
 	{
 		$this->callback->register('after_construct');
 		$this->callback->register('after_construct','non_generic_after_construct');
-		$this->assert_equals(array('after_construct','after_construct','non_generic_after_construct'),$this->callback->get_callbacks('after_construct'));
+		$this->assert_equals(['after_construct','after_construct','non_generic_after_construct'],$this->callback->get_callbacks('after_construct'));
 	}
 
 	public function test_register_prepends_to_registry()
 	{
 		$this->callback->register('after_construct');
-		$this->callback->register('after_construct','non_generic_after_construct',array('prepend' => true));
-		$this->assert_equals(array('non_generic_after_construct','after_construct','after_construct'),$this->callback->get_callbacks('after_construct'));
+		$this->callback->register('after_construct','non_generic_after_construct',['prepend' => true]);
+		$this->assert_equals(['non_generic_after_construct','after_construct','after_construct'],$this->callback->get_callbacks('after_construct'));
 	}
 
 	public function test_registers_via_static_array_definition()
@@ -138,14 +138,14 @@ class CallBackTest extends DatabaseTest
 	{
 		$this->callback->register('after_construct');
 		$this->callback->register('after_construct');
-		$this->assert_equals(array('after_construct','after_construct','after_construct'),$this->callback->get_callbacks('after_construct'));
+		$this->assert_equals(['after_construct','after_construct','after_construct'],$this->callback->get_callbacks('after_construct'));
 	}
 
 	public function test_register_closure_callback()
 	{
-		$closure = function($model) {};
+		$closure = function($model): void {};
 		$this->callback->register('after_save',$closure);
-		$this->assert_equals(array($closure),$this->callback->get_callbacks('after_save'));
+		$this->assert_equals([$closure],$this->callback->get_callbacks('after_save'));
 	}
 
 	public function test_get_callbacks_returns_array()
@@ -161,7 +161,7 @@ class CallBackTest extends DatabaseTest
 
 	public function test_invoke_runs_all_callbacks()
 	{
-		$mock = $this->get_mock('VenueCB',array('after_destroy_one','after_destroy_two'));
+		$mock = $this->get_mock('VenueCB',['after_destroy_one','after_destroy_two']);
 		$mock->expects($this->once())->method('after_destroy_one');
 		$mock->expects($this->once())->method('after_destroy_two');
 		$this->callback->invoke($mock,'after_destroy');
@@ -170,7 +170,7 @@ class CallBackTest extends DatabaseTest
 	public function test_invoke_closure()
 	{
 		$i_ran = false;
-		$this->callback->register('after_validation',function($model) use (&$i_ran) { $i_ran = true; });
+		$this->callback->register('after_validation',function($model) use (&$i_ran): void { $i_ran = true; });
 		$this->callback->invoke(null,'after_validation');
 		$this->assert_true($i_ran);
 	}
@@ -188,26 +188,26 @@ class CallBackTest extends DatabaseTest
 	 */
 	public function test_invoke_unregistered_callback()
 	{
-		$mock = $this->get_mock('VenueCB', array('columns'));
+		$mock = $this->get_mock('VenueCB', ['columns']);
 		$this->callback->invoke($mock,'before_validation_on_create');
 	}
 
 	public function test_before_callbacks_pass_on_false_return_callback_returned_false()
 	{
-		$this->callback->register('before_validation',function($model) { return false; });
+		$this->callback->register('before_validation',fn($model) => false);
 		$this->assert_false($this->callback->invoke(null,'before_validation'));
 	}
 
 	public function test_before_callbacks_does_not_pass_on_false_for_after_callbacks()
 	{
-		$this->callback->register('after_validation',function($model) { return false; });
+		$this->callback->register('after_validation',fn($model) => false);
 		$this->assert_true($this->callback->invoke(null,'after_validation'));
 	}
 
 	public function test_gh_28_after_create_should_be_invoked_after_auto_incrementing_pk_is_set()
 	{
 		$that = $this;
-		VenueCB::$after_create = function($model) use ($that) { $that->assert_not_null($model->id); };
+		VenueCB::$after_create = function($model) use ($that): void { $that->assert_not_null($model->id); };
 		ActiveRecord\Table::clear_cache('VenueCB');
 		$venue = VenueCB::find(1);
 		$venue = new VenueCB($venue->attributes());
@@ -218,15 +218,15 @@ class CallBackTest extends DatabaseTest
 
 	public function test_before_create_returned_false_halts_execution()
 	{
-		VenueCB::$before_create = array('before_create_halt_execution');
+		VenueCB::$before_create = ['before_create_halt_execution'];
 		ActiveRecord\Table::clear_cache('VenueCB');
 		$table = ActiveRecord\Table::load('VenueCB');
 
 		$i_ran = false;
 		$i_should_have_ran = false;
-		$table->callback->register('before_save', function($model) use (&$i_should_have_ran) { $i_should_have_ran = true; });
-		$table->callback->register('before_create',function($model) use (&$i_ran) { $i_ran = true; });
-		$table->callback->register('after_create',function($model) use (&$i_ran) { $i_ran = true; });
+		$table->callback->register('before_save', function($model) use (&$i_should_have_ran): void { $i_should_have_ran = true; });
+		$table->callback->register('before_create',function($model) use (&$i_ran): void { $i_ran = true; });
+		$table->callback->register('after_create',function($model) use (&$i_ran): void { $i_ran = true; });
 
 		$v = VenueCB::find(1);
 		$v->id = null;
@@ -234,20 +234,20 @@ class CallBackTest extends DatabaseTest
 
 		$this->assert_true($i_should_have_ran);
 		$this->assert_false($i_ran);
-		$this->assert_true(strpos(ActiveRecord\Table::load('VenueCB')->last_sql, 'INSERT') === false);
+		$this->assert_true(!str_contains(ActiveRecord\Table::load('VenueCB')->last_sql, 'INSERT'));
 	}
 
 	public function test_before_save_returned_false_halts_execution()
 	{
-		VenueCB::$before_update = array('before_update_halt_execution');
+		VenueCB::$before_update = ['before_update_halt_execution'];
 		ActiveRecord\Table::clear_cache('VenueCB');
 		$table = ActiveRecord\Table::load('VenueCB');
 
 		$i_ran = false;
 		$i_should_have_ran = false;
-		$table->callback->register('before_save', function($model) use (&$i_should_have_ran) { $i_should_have_ran = true; });
-		$table->callback->register('before_update',function($model) use (&$i_ran) { $i_ran = true; });
-		$table->callback->register('after_save',function($model) use (&$i_ran) { $i_ran = true; });
+		$table->callback->register('before_save', function($model) use (&$i_should_have_ran): void { $i_should_have_ran = true; });
+		$table->callback->register('before_update',function($model) use (&$i_ran): void { $i_ran = true; });
+		$table->callback->register('after_save',function($model) use (&$i_ran): void { $i_ran = true; });
 
 		$v = VenueCB::find(1);
 		$v->name .= 'test';
@@ -256,30 +256,30 @@ class CallBackTest extends DatabaseTest
 		$this->assert_true($i_should_have_ran);
 		$this->assert_false($i_ran);
 		$this->assert_false($ret);
-		$this->assert_true(strpos(ActiveRecord\Table::load('VenueCB')->last_sql, 'UPDATE') === false);
+		$this->assert_true(!str_contains(ActiveRecord\Table::load('VenueCB')->last_sql, 'UPDATE'));
 	}
 
 	public function test_before_destroy_returned_false_halts_execution()
 	{
-		VenueCB::$before_destroy = array('before_destroy_halt_execution');
+		VenueCB::$before_destroy = ['before_destroy_halt_execution'];
 		ActiveRecord\Table::clear_cache('VenueCB');
 		$table = ActiveRecord\Table::load('VenueCB');
 
 		$i_ran = false;
-		$table->callback->register('before_destroy',function($model) use (&$i_ran) { $i_ran = true; });
-		$table->callback->register('after_destroy',function($model) use (&$i_ran) { $i_ran = true; });
+		$table->callback->register('before_destroy',function($model) use (&$i_ran): void { $i_ran = true; });
+		$table->callback->register('after_destroy',function($model) use (&$i_ran): void { $i_ran = true; });
 
 		$v = VenueCB::find(1);
 		$ret = $v->delete();
 
 		$this->assert_false($i_ran);
 		$this->assert_false($ret);
-		$this->assert_true(strpos(ActiveRecord\Table::load('VenueCB')->last_sql, 'DELETE') === false);
+		$this->assert_true(!str_contains(ActiveRecord\Table::load('VenueCB')->last_sql, 'DELETE'));
 	}
 
 	public function test_before_validation_returned_false_halts_execution()
 	{
-		VenueCB::$before_validation = array('before_validation_halt_execution');
+		VenueCB::$before_validation = ['before_validation_halt_execution'];
 		ActiveRecord\Table::clear_cache('VenueCB');
 		$table = ActiveRecord\Table::load('VenueCB');
 
@@ -288,7 +288,7 @@ class CallBackTest extends DatabaseTest
 		$ret = $v->save();
 
 		$this->assert_false($ret);
-		$this->assert_true(strpos(ActiveRecord\Table::load('VenueCB')->last_sql, 'UPDATE') === false);
+		$this->assert_true(!str_contains(ActiveRecord\Table::load('VenueCB')->last_sql, 'UPDATE'));
 	}
 };
 ?>

@@ -34,7 +34,7 @@ class SharedMysqlAdapter extends MysqlAdapter
 		}
 	}
 
-	public function query($sql, &$values = array())
+	public function query($sql, &$values = [])
 	{
 		if (!isset(self::$currentDefaultDb) || self::$currentDefaultDb != $this->db)
 		{

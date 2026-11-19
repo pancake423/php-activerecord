@@ -98,7 +98,7 @@ abstract class Inflector
 	 */
 	public function underscorify($s)
 	{
-		return preg_replace(array('/[_\- ]+/','/([a-z])([A-Z])/'),array('_','\\1_\\2'),trim($s));
+		return preg_replace(['/[_\- ]+/','/([a-z])([A-Z])/'],['_','\\1_\\2'],trim($s));
 	}
 
 	public function keyify($class_name)
@@ -106,7 +106,7 @@ abstract class Inflector
 		return strtolower($this->underscorify(denamespace($class_name))) . '_id';
 	}
 
-	abstract function variablize($s);
+	abstract public function variablize($s);
 }
 
 /**
@@ -115,5 +115,5 @@ abstract class Inflector
 class StandardInflector extends Inflector
 {
 	public function tableize($s) { return Utils::pluralize(strtolower($this->underscorify($s))); }
-	public function variablize($s) { return str_replace(array('-',' '),array('_','_'),strtolower(trim($s))); }
+	public function variablize($s) { return str_replace(['-',' '],['_','_'],strtolower(trim($s))); }
 }

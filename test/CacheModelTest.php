@@ -18,7 +18,6 @@ class CacheModelTest extends DatabaseTest
 	{
 		$class = new ReflectionClass($className);
 		$method = $class->getMethod($methodName);
-		$method->setAccessible(true);
 		return $method;
 	}
 
@@ -43,14 +42,14 @@ class CacheModelTest extends DatabaseTest
 		$method = $this->set_method_public('Author', 'cache_key');
 		$author = Author::first();
 
-		$this->assert_equals("Author-1", $method->invokeArgs($author, array()));
+		$this->assert_equals("Author-1", $method->invokeArgs($author, []));
 	}
 
 	public function test_model_cache_find_by_pk()
 	{
 		$publisher = Publisher::find(1);
 		$method = $this->set_method_public('Publisher', 'cache_key');
-		$cache_key = $method->invokeArgs($publisher, array());
+		$cache_key = $method->invokeArgs($publisher, []);
 		$publisherDirectlyFromCache = Cache::$adapter->read($cache_key);
 
 		$this->assertEquals($publisher->name, $publisherDirectlyFromCache->name);
@@ -58,13 +57,13 @@ class CacheModelTest extends DatabaseTest
 
 	public function test_model_cache_new()
 	{
-		$publisher = new Publisher(array(
+		$publisher = new Publisher([
 		   "name"=>"HarperCollins"
-		));
+		]);
 		$publisher->save();
 
 		$method = $this->set_method_public('Publisher', 'cache_key');
-		$cache_key = $method->invokeArgs($publisher, array());
+		$cache_key = $method->invokeArgs($publisher, []);
 
 		$publisherDirectlyFromCache = Cache::$adapter->read($cache_key);
 
@@ -79,7 +78,7 @@ class CacheModelTest extends DatabaseTest
 
 		foreach($publishers as $publisher)
 		{
-			$cache_key = $method->invokeArgs($publisher, array());
+			$cache_key = $method->invokeArgs($publisher, []);
 			$publisherDirectlyFromCache = Cache::$adapter->read($cache_key);
 
 			$this->assertEquals($publisher->name, $publisherDirectlyFromCache->name);
@@ -90,7 +89,7 @@ class CacheModelTest extends DatabaseTest
 	{
 		$method = $this->set_method_public('Author', 'cache_key');
 		$author = Author::first();
-		$cache_key = $method->invokeArgs($author, array());
+		$cache_key = $method->invokeArgs($author, []);
 		$this->assertFalse(Cache::$adapter->read($cache_key));
 	}
 
@@ -98,7 +97,7 @@ class CacheModelTest extends DatabaseTest
 	{
 		$method = $this->set_method_public('Publisher', 'cache_key');
 		$publisher = Publisher::find(1);
-		$cache_key = $method->invokeArgs($publisher, array());
+		$cache_key = $method->invokeArgs($publisher, []);
 
 		$publisher->delete();
 
@@ -111,7 +110,7 @@ class CacheModelTest extends DatabaseTest
 		$method = $this->set_method_public('Publisher', 'cache_key');
 
 		$publisher = Publisher::find(1);
-		$cache_key = $method->invokeArgs($publisher, array());
+		$cache_key = $method->invokeArgs($publisher, []);
 		$this->assertEquals("Random House", $publisher->name);
 
 		$publisherDirectlyFromCache = Cache::$adapter->read($cache_key);

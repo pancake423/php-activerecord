@@ -21,7 +21,7 @@ class Memcache
 	public function __construct($options)
 	{
 		$this->memcache = new \Memcache();
-		$options['port'] = isset($options['port']) ? $options['port'] : self::DEFAULT_PORT;
+		$options['port'] ??= self::DEFAULT_PORT;
 
 		if (!$this->memcache->connect($options['host'],$options['port']))
 			throw new CacheException("Could not connect to $options[host]:$options[port]");

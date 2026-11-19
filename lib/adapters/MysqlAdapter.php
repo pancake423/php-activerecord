@@ -72,7 +72,7 @@ class MysqlAdapter extends Connection
 
 	public function set_encoding($charset)
 	{
-		$params = array($charset);
+		$params = [$charset];
 		$this->query('SET NAMES ?',$params);
 	}
 
@@ -80,19 +80,19 @@ class MysqlAdapter extends Connection
 
 	public function native_database_types()
 	{
-		return array(
+		return [
 			'primary_key' => 'int(11) UNSIGNED DEFAULT NULL auto_increment PRIMARY KEY',
-			'string' => array('name' => 'varchar', 'length' => 255),
-			'text' => array('name' => 'text'),
-			'integer' => array('name' => 'int', 'length' => 11),
-			'float' => array('name' => 'float'),
-			'datetime' => array('name' => 'datetime'),
-			'timestamp' => array('name' => 'datetime'),
-			'time' => array('name' => 'time'),
-			'date' => array('name' => 'date'),
-			'binary' => array('name' => 'blob'),
-			'boolean' => array('name' => 'tinyint', 'length' => 1)
-		);
+			'string' => ['name' => 'varchar', 'length' => 255],
+			'text' => ['name' => 'text'],
+			'integer' => ['name' => 'int', 'length' => 11],
+			'float' => ['name' => 'float'],
+			'datetime' => ['name' => 'datetime'],
+			'timestamp' => ['name' => 'datetime'],
+			'time' => ['name' => 'time'],
+			'date' => ['name' => 'date'],
+			'binary' => ['name' => 'blob'],
+			'boolean' => ['name' => 'tinyint', 'length' => 1]
+		];
 	}
 
 }

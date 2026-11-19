@@ -30,7 +30,7 @@ class SqliteAdapterTest extends AdapterTest
 			ActiveRecord\Connection::instance("sqlite://" . self::InvalidDb);
 			$this->assertFalse(true);
 		}
-		catch (ActiveRecord\DatabaseException $e)
+		catch (ActiveRecord\DatabaseException)
 		{
 			$this->assertFalse(file_exists(__DIR__ . "/" . self::InvalidDb));
 		}
@@ -38,11 +38,11 @@ class SqliteAdapterTest extends AdapterTest
 
 	public function test_limit_with_null_offset_does_not_contain_offset()
 	{
-		$ret = array();
+		$ret = [];
 		$sql = 'SELECT * FROM authors ORDER BY name ASC';
-		$this->conn->query_and_fetch($this->conn->limit($sql,null,1),function($row) use (&$ret) { $ret[] = $row; });
+		$this->conn->query_and_fetch($this->conn->limit($sql,null,1),function($row) use (&$ret): void { $ret[] = $row; });
 
-		$this->assert_true(strpos($this->conn->last_query, 'LIMIT 1') !== false);
+		$this->assert_true(str_contains($this->conn->last_query, 'LIMIT 1'));
 	}
 
 	public function test_gh183_sqliteadapter_autoincrement()

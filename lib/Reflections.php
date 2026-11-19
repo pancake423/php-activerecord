@@ -17,7 +17,7 @@ class Reflections extends Singleton
 	 *
 	 * @var array
 	 */
-	private $reflections = array();
+	private $reflections = [];
 
 	/**
 	 * Instantiates a new ReflectionClass for the given class.
@@ -29,8 +29,7 @@ class Reflections extends Singleton
 	{
 		$class = $this->get_class($class);
 
-		if (!isset($this->reflections[$class]))
-			$this->reflections[$class] = new ReflectionClass($class);
+		$this->reflections[$class] ??= new ReflectionClass($class);
 			
 		return $this;
 	}
@@ -75,7 +74,7 @@ class Reflections extends Singleton
 	private function get_class($mixed=null)
 	{
 		if (is_object($mixed))
-			return get_class($mixed);
+			return $mixed::class;
 
 		if (!is_null($mixed))
 			return $mixed;

@@ -24,7 +24,7 @@ class Column
 	 * @static
 	 * @var array
 	 */
-	static $TYPE_MAPPING = array(
+	static $TYPE_MAPPING = [
 		'datetime'	=> self::DATETIME,
 		'timestamp'	=> self::DATETIME,
 		'date'		=> self::DATE,
@@ -40,7 +40,7 @@ class Column
 		'double'	=> self::DECIMAL,
 		'numeric'	=> self::DECIMAL,
 		'decimal'	=> self::DECIMAL,
-		'dec'		=> self::DECIMAL);
+		'dec'		=> self::DECIMAL];
 
 	/**
 	 * The true name of this column.

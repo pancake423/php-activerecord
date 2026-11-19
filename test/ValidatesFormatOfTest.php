@@ -3,9 +3,9 @@
 class BookFormat extends ActiveRecord\Model
 {
 	static $table = 'books';
-	static $validates_format_of = array(
-		array('name')
-	);
+	static $validates_format_of = [
+		['name']
+	];
 };
 
 class ValidatesFormatOfTest extends DatabaseTest
@@ -13,18 +13,18 @@ class ValidatesFormatOfTest extends DatabaseTest
 	public function set_up($connection_name=null)
 	{
 		parent::set_up($connection_name);
-		BookFormat::$validates_format_of[0] = array('name');
+		BookFormat::$validates_format_of[0] = ['name'];
 	}
 
 	public function test_format()
 	{
 		BookFormat::$validates_format_of[0]['with'] = '/^[a-z\W]*$/';
-		$book = new BookFormat(array('author_id' => 1, 'name' => 'testing reg'));
+		$book = new BookFormat(['author_id' => 1, 'name' => 'testing reg']);
 		$book->save();
 		$this->assert_false($book->errors->is_invalid('name'));
 
 		BookFormat::$validates_format_of[0]['with'] = '/[0-9]/';
-		$book = new BookFormat(array('author_id' => 1, 'name' => 12));
+		$book = new BookFormat(['author_id' => 1, 'name' => 12]);
 		$book->save();
 		$this->assert_false($book->errors->is_invalid('name'));
 	}
@@ -51,7 +51,7 @@ class ValidatesFormatOfTest extends DatabaseTest
 	{
 		BookFormat::$validates_format_of[0]['allow_blank'] = true;
 		BookFormat::$validates_format_of[0]['with'] = '/[^0-9]/';
-		$book = new BookFormat(array('author_id' => 1, 'name' => ''));
+		$book = new BookFormat(['author_id' => 1, 'name' => '']);
 		$book->save();
 		$this->assert_false($book->errors->is_invalid('name'));
 	}
@@ -82,7 +82,7 @@ class ValidatesFormatOfTest extends DatabaseTest
 	 */
 	public function test_invalid_with_expression_as_non_string()
 	{
-		BookFormat::$validates_format_of[0]['with'] = array('test');
+		BookFormat::$validates_format_of[0]['with'] = ['test'];
 		$book = new BookFormat;
 		$book->name = null;
 		$book->save();

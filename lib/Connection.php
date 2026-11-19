@@ -48,11 +48,6 @@ abstract class Connection
 	 */
 	public $protocol;
 	/**
-	 * The connection info
-	 * @var string
-	 */
-	private $info;
-	/**
 	 * Force a check of server and reconnect if it went away
 	 * @var bool
 	 */
@@ -71,11 +66,11 @@ abstract class Connection
 	 * Default PDO options to set for each connection.
 	 * @var array
 	 */
-	static $PDO_OPTIONS = array(
+	static $PDO_OPTIONS = [
 		PDO::ATTR_CASE => PDO::CASE_LOWER,
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 		PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
-		PDO::ATTR_STRINGIFY_FETCHES => false);
+		PDO::ATTR_STRINGIFY_FETCHES => false];
 	/**
 	 * The quote character for stuff like column and field names.
 	 * @var string
@@ -101,7 +96,7 @@ abstract class Connection
 	{
 		$config = Config::instance();
 
-		if (strpos($connection_string_or_connection_name, '://') === false)
+		if (!str_contains($connection_string_or_connection_name, '://'))
 		{
 			$connection_string = $connection_string_or_connection_name ?
 				$config->get_connection($connection_string_or_connection_name) :
@@ -183,8 +178,8 @@ abstract class Connection
 		$info->protocol = $url['scheme'];
 		$info->host = $url['host'];
 		$info->db = isset($url['path']) ? substr($url['path'], 1) : null;
-		$info->user = isset($url['user']) ? $url['user'] : null;
-		$info->pass = isset($url['pass']) ? $url['pass'] : null;
+		$info->user = $url['user'] ?? null;
+		$info->pass = $url['pass'] ?? null;
 
 		$allow_blank_db = ($info->protocol == 'sqlite');
 
@@ -202,7 +197,7 @@ abstract class Connection
 				$info->host = $matches[1][0];
 				$info->db = $matches[2][0];
 			}
-		} elseif (substr($info->host, 0, 8) == 'windows(')
+		} elseif (str_starts_with($info->host, 'windows('))
 		{
 			$info->host = urldecode(substr($info->host, 8) . '/' . substr($info->db, 0, -1));
 			$info->db = null;
@@ -214,7 +209,7 @@ abstract class Connection
 		if (isset($url['port']))
 			$info->port = $url['port'];
 
-		if (strpos($connection_url, 'decode=true') !== false)
+		if (str_contains($connection_url, 'decode=true'))
 		{
 			if ($info->user)
 				$info->user = urldecode($info->user);
@@ -226,7 +221,7 @@ abstract class Connection
 		if (isset($url['query']))
 		{
 			foreach (explode('/&/', $url['query']) as $pair) {
-				list($name, $value) = explode('=', $pair);
+				[$name, $value] = explode('=', $pair);
 
 				if ($name == 'charset')
 					$info->charset = $value;
@@ -242,9 +237,11 @@ abstract class Connection
 	 * @param array $info Array containing URL parts
 	 * @return Connection
 	 */
-	protected function __construct($info)
+	protected function __construct(/**
+     * The connection info
+     */
+    private $info)
 	{
-		$this->info = $info;
 		$this->connect();
 	}
 
@@ -279,7 +276,7 @@ abstract class Connection
 	 */
 	public function columns($table)
 	{
-		$columns = array();
+		$columns = [];
 		$sth = $this->query_column_info($table);
 
 		while (($row = $sth->fetch())) {
@@ -320,7 +317,7 @@ abstract class Connection
 	 * @param array &$values Optional array of bind values
 	 * @return mixed A result set object
 	 */
-	public function query($sql, &$values=array())
+	public function query($sql, &$values=[])
 	{
 		if ($this->logging)
 		{
@@ -362,7 +359,7 @@ abstract class Connection
 			$this->connection->prepare('SELECT 1')->execute();
 		} catch (PDOException $e) {
 			$exception_message = $e->getMessage();
-			if (strpos($exception_message, 'server has gone away') !== false ) {
+			if (str_contains($exception_message, 'server has gone away') ) {
 				$this->connect();
 			} else {
 				throw new DatabaseException($e);
@@ -377,7 +374,7 @@ abstract class Connection
 	 * @param array &$values Optional array of values to bind to the query.
 	 * @return string
 	 */
-	public function query_and_fetch_one($sql, &$values=array())
+	public function query_and_fetch_one($sql, &$values=[])
 	{
 		$sth = $this->query($sql, $values);
 		$row = $sth->fetch(PDO::FETCH_NUM);
@@ -405,7 +402,7 @@ abstract class Connection
 	 */
 	public function tables()
 	{
-		$tables = array();
+		$tables = [];
 		$sth = $this->query_for_tables();
 
 		while (($row = $sth->fetch(PDO::FETCH_NUM)))
@@ -446,7 +443,7 @@ abstract class Connection
 	 *
 	 * @return boolean
 	 */
-	function supports_sequences()
+	public function supports_sequences()
 	{
 		return false;
 	}
@@ -534,7 +531,7 @@ abstract class Connection
 	 * @param int $limit Maximum number of rows to return.
 	 * @return string The SQL query that will limit results to specified parameters
 	 */
-	abstract function limit($sql, $offset, $limit);
+	abstract public function limit($sql, $offset, $limit);
 
 	/**
 	 * Query for column meta info and return statement handle.
@@ -550,12 +547,12 @@ abstract class Connection
 	 *
 	 * @return PDOStatement
 	 */
-	abstract function query_for_tables();
+	abstract public function query_for_tables();
 
 	/**
 	 * Executes query to specify the character set for this connection.
 	 */
-	abstract function set_encoding($charset);
+	abstract public function set_encoding($charset);
 
 	/*
 	 * Returns an array mapping of native database types

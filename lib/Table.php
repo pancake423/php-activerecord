@@ -15,7 +15,7 @@ namespace ActiveRecord;
  */
 class Table
 {
-	private static $cache = array();
+	private static $cache = [];
 
 	public $class;
 	public $conn;
@@ -23,7 +23,7 @@ class Table
 	public $last_sql;
 
 	// Name/value pairs of columns in this table
-	public $columns = array();
+	public $columns = [];
 
 	/**
 	 * Name of the table.
@@ -60,7 +60,7 @@ class Table
 	/**
 	 * List of relationships for this table.
 	 */
-	private $relationships = array();
+	private $relationships = [];
 
 	public static function load($model_class_name)
 	{
@@ -80,7 +80,7 @@ class Table
 		if ($model_class_name && array_key_exists($model_class_name,self::$cache))
 			unset(self::$cache[$model_class_name]);
 		else
-			self::$cache = array();
+			self::$cache = [];
 	}
 
 	public function __construct($class_name)
@@ -97,8 +97,8 @@ class Table
 		$this->set_setters_and_getters();
 
 		$this->callback = new CallBack($class_name);
-		$this->callback->register('before_save', function(Model $model) { $model->set_timestamps(); }, array('prepend' => true));
-		$this->callback->register('after_save', function(Model $model) { $model->reset_dirty(); }, array('prepend' => true));
+		$this->callback->register('before_save', function(Model $model): void { $model->set_timestamps(); }, ['prepend' => true]);
+		$this->callback->register('after_save', function(Model $model): void { $model->reset_dirty(); }, ['prepend' => true]);
 	}
 
 	public function reestablish_connection($close=true)
@@ -121,7 +121,7 @@ class Table
 
 		$ret = $space = '';
 
-		$existing_tables = array();
+		$existing_tables = [];
 		foreach ($joins as $value)
 		{
 			$ret .= $space;
@@ -195,9 +195,9 @@ class Table
 			if (!is_hash($options['conditions']))
 			{
 				if (is_string($options['conditions']))
-					$options['conditions'] = array($options['conditions']);
+					$options['conditions'] = [$options['conditions']];
 
-				call_user_func_array(array($sql,'where'),$options['conditions']);
+				call_user_func_array($sql->where(...),$options['conditions']);
 			}
 			else
 			{
@@ -249,16 +249,13 @@ class Table
 		$this->last_sql = $sql;
 
 		$collect_attrs_for_includes = is_null($includes) ? false : true;
-		$list = $attrs = array();
+		$list = $attrs = [];
 		$sth = $this->conn->query($sql,$this->process_data($values));
 
 		$self = $this;
 		while (($row = $sth->fetch()))
 		{
-			$cb = function() use ($row, $self)
-			{
-				return new $self->class->name($row, false, true, false);
-			};
+			$cb = (fn() => new $self->class->name($row, false, true, false));
 			if ($this->cache_individual_model)
 			{
 				$key = $this->cache_key_for_model(array_intersect_key($row, array_flip($this->pk)));
@@ -292,10 +289,10 @@ class Table
 	 * @param $includes array eager load directives
 	 * @return void
 	 */
-	private function execute_eager_load($models=array(), $attrs=array(), $includes=array())
+	private function execute_eager_load($models=[], $attrs=[], $includes=[])
 	{
 		if (!is_array($includes))
-			$includes = array($includes);
+			$includes = [$includes];
 
 		foreach ($includes as $index => $name)
 		{
@@ -306,7 +303,7 @@ class Table
 				$name = $index;
 			}
 			else
-				$nested_includes = array();
+				$nested_includes = [];
 
 			$rel = $this->get_relationship($name, true);
 			$rel->load_eagerly($models, $attrs, $nested_includes, $this);
@@ -315,7 +312,7 @@ class Table
 
 	public function get_column_by_inflected_name($inflected_name)
 	{
-		foreach ($this->columns as $raw_name => $column)
+		foreach ($this->columns as $column)
 		{
 			if ($column->inflected_name == $inflected_name)
 				return $column;
@@ -415,7 +412,7 @@ class Table
 
 		$table_name = $this->get_fully_qualified_table_name($quote_name);
 		$conn = $this->conn;
-		$this->columns = Cache::get("get_meta_data-$table_name", function() use ($conn, $table_name) { return $conn->columns($table_name); });
+		$this->columns = Cache::get("get_meta_data-$table_name", fn() => $conn->columns($table_name));
 	}
 
 	/**
@@ -427,7 +424,7 @@ class Table
 	 */
 	private function map_names(&$hash, &$map)
 	{
-		$ret = array();
+		$ret = [];
 
 		foreach ($hash as $name => &$value)
 		{
@@ -463,10 +460,10 @@ class Table
 	private function set_primary_key()
 	{
 		if (($pk = $this->class->getStaticPropertyValue('pk',null)) || ($pk = $this->class->getStaticPropertyValue('primary_key',null)))
-			$this->pk = is_array($pk) ? $pk : array($pk);
+			$this->pk = is_array($pk) ? $pk : [$pk];
 		else
 		{
-			$this->pk = array();
+			$this->pk = [];
 
 			foreach ($this->columns as $c)
 			{
@@ -533,7 +530,7 @@ class Table
 			foreach (wrap_strings_in_arrays($definitions) as $definition)
 			{
 				$relationship = null;
-				$definition += array('namespace' => $namespace);
+				$definition += ['namespace' => $namespace];
 
 				switch ($name)
 				{
@@ -570,8 +567,8 @@ class Table
 	 */
 	private function set_delegates()
 	{
-		$delegates = $this->class->getStaticPropertyValue('delegate',array());
-		$new = array();
+		$delegates = $this->class->getStaticPropertyValue('delegate',[]);
+		$new = [];
 
 		if (!array_key_exists('processed', $delegates))
 			$delegates['processed'] = false;
@@ -583,13 +580,12 @@ class Table
 				if (!is_array($delegate) || !isset($delegate['to']))
 					continue;
 
-				if (!isset($delegate['prefix']))
-					$delegate['prefix'] = null;
+				$delegate['prefix'] ??= null;
 
-				$new_delegate = array(
+				$new_delegate = [
 					'to'		=> $delegate['to'],
 					'prefix'	=> $delegate['prefix'],
-					'delegate'	=> array());
+					'delegate'	=> []];
 
 				foreach ($delegate as $name => $value)
 				{
@@ -610,8 +606,8 @@ class Table
 	 */
 	private function set_setters_and_getters()
 	{
-		$getters = $this->class->getStaticPropertyValue('getters', array());
-		$setters = $this->class->getStaticPropertyValue('setters', array());
+		$getters = $this->class->getStaticPropertyValue('getters', []);
+		$setters = $this->class->getStaticPropertyValue('setters', []);
 
 		if (!empty($getters) || !empty($setters))
 			trigger_error('static::$getters and static::$setters are deprecated. Please define your setters and getters by declaring methods in your model prefixed with get_ or set_. See

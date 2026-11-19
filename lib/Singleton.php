@@ -19,7 +19,7 @@ abstract class Singleton
 	 *
 	 * @var array
 	 */
-	private static $instances = array();
+	private static $instances = [];
 
 	/**
 	 * Static method for instantiating a singleton object.
@@ -28,10 +28,9 @@ abstract class Singleton
 	 */
 	final public static function instance()
 	{
-		$class_name = get_called_class();
+		$class_name = static::class;
 
-		if (!isset(self::$instances[$class_name]))
-			self::$instances[$class_name] = new $class_name;
+		self::$instances[$class_name] ??= new $class_name;
 
 		return self::$instances[$class_name];
 	}
@@ -51,6 +50,6 @@ abstract class Singleton
 	final protected function get_called_class()
 	{
 		$backtrace = debug_backtrace();
-		return get_class($backtrace[2]['object']);
+		return $backtrace[2]['object']::class;
 	}
 }

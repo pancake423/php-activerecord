@@ -9,11 +9,10 @@ namespace ActiveRecord;
  *
  * @package ActiveRecord
  */
-class SQLBuilder
+class SQLBuilder implements \Stringable
 {
 	private $connection;
 	private $operation = 'SELECT';
-	private $table;
 	private $select = '*';
 	private $joins;
 	private $order;
@@ -25,7 +24,7 @@ class SQLBuilder
 
 	// for where
 	private $where;
-	private $where_values = array();
+	private $where_values = [];
 
 	// for insert/update
 	private $data;
@@ -39,13 +38,12 @@ class SQLBuilder
 	 * @return SQLBuilder
 	 * @throws ActiveRecordException if connection was invalid
 	 */
-	public function __construct($connection, $table)
+	public function __construct($connection, private $table)
 	{
 		if (!$connection)
 			throw new ActiveRecordException('A valid database connection is required.');
 
 		$this->connection	= $connection;
-		$this->table		= $table;
 	}
 
 	/**
@@ -53,7 +51,7 @@ class SQLBuilder
 	 *
 	 * @return string
 	 */
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->to_s();
 	}
@@ -77,7 +75,7 @@ class SQLBuilder
 	 */
 	public function bind_values()
 	{
-		$ret = array();
+		$ret = [];
 
 		if ($this->data)
 			$ret = array_values($this->data);
@@ -151,7 +149,7 @@ class SQLBuilder
 		$this->data = $hash;
 
 		if ($pk && $sequence_name)
-			$this->sequence = array($pk,$sequence_name);
+			$this->sequence = [$pk,$sequence_name];
 
 		return $this;
 	}
@@ -191,14 +189,14 @@ class SQLBuilder
 		{
 			$v = strtolower($parts[$i]);
 
-			if (strpos($v,' asc') !== false)
+			if (str_contains($v,' asc'))
 				$parts[$i] = preg_replace('/asc/i','DESC',$parts[$i]);
-			elseif (strpos($v,' desc') !== false)
+			elseif (str_contains($v,' desc'))
 				$parts[$i] = preg_replace('/desc/i','ASC',$parts[$i]);
 			else
 				$parts[$i] .= ' DESC';
 		}
-		return join(',',$parts);
+		return implode(',',$parts);
 	}
 
 	/**
@@ -211,19 +209,19 @@ class SQLBuilder
 	 * @param $map A hash of "mapped_column_name" => "real_column_name"
 	 * @return A conditions array in the form array(sql_string, value1, value2,...)
 	 */
-	public static function create_conditions_from_underscored_string(Connection $connection, $name, &$values=array(), &$map=null)
+	public static function create_conditions_from_underscored_string(Connection $connection, $name, &$values=[], &$map=null)
 	{
 		if (!$name)
 			return null;
 
 		$parts = preg_split('/(_and_|_or_)/i',$name,-1,PREG_SPLIT_DELIM_CAPTURE);
 		$num_values = count($values);
-		$conditions = array('');
+		$conditions = [''];
 
 		for ($i=0,$j=0,$n=count($parts); $i<$n; $i+=2,++$j)
 		{
 			if ($i >= 2)
-				$conditions[0] .= preg_replace(array('/_and_/i','/_or_/i'),array(' AND ',' OR '),$parts[$i-1]);
+				$conditions[0] .= preg_replace(['/_and_/i','/_or_/i'],[' AND ',' OR '],$parts[$i-1]);
 
 			if ($j < $num_values)
 			{
@@ -254,10 +252,10 @@ class SQLBuilder
 	 * @param $map A hash of "mapped_column_name" => "real_column_name"
 	 * @return array A hash of array(name => value, ...)
 	 */
-	public static function create_hash_from_underscored_string($name, &$values=array(), &$map=null)
+	public static function create_hash_from_underscored_string($name, &$values=[], &$map=null)
 	{
 		$parts = preg_split('/(_and_|_or_)/i',$name);
-		$hash = array();
+		$hash = [];
 
 		for ($i=0,$n=count($parts); $i<$n; ++$i)
 		{
@@ -275,9 +273,9 @@ class SQLBuilder
 	 * @param array $hash
 	 * @return array $new
 	 */
-	private function prepend_table_name_to_fields($hash=array())
+	private function prepend_table_name_to_fields($hash=[])
 	{
-		$new = array();
+		$new = [];
 		$table = $this->connection->quote_name($this->table);
 
 		foreach ($hash as $key => $value)
@@ -306,7 +304,7 @@ class SQLBuilder
 			// if the values has a nested array then we'll need to use Expressions to expand the bind marker for us
 			$values = array_slice($args,1);
 
-			foreach ($values as $name => &$value)
+			foreach ($values as &$value)
 			{
 				if (is_array($value))
 				{
@@ -346,7 +344,7 @@ class SQLBuilder
 	private function build_insert()
 	{
 		require_once 'Expressions.php';
-		$keys = join(',',$this->quoted_key_names());
+		$keys = implode(',',$this->quoted_key_names());
 
 		if ($this->sequence)
 		{
@@ -391,7 +389,7 @@ class SQLBuilder
 		if (strlen($this->update) > 0)
 			$set = $this->update;
 		else
-			$set = join('=?, ', $this->quoted_key_names()) . '=?';
+			$set = implode('=?, ', $this->quoted_key_names()) . '=?';
 
 		$sql = "UPDATE $this->table SET $set";
 
@@ -412,7 +410,7 @@ class SQLBuilder
 
 	private function quoted_key_names()
 	{
-		$keys = array();
+		$keys = [];
 
 		foreach ($this->data as $key => $value)
 			$keys[] = $this->connection->quote_name($key);

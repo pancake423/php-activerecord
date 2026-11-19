@@ -60,7 +60,7 @@ WHERE c.relname = ?
       AND a.atttypid = t.oid
 ORDER BY a.attnum
 SQL;
-		$values = array($table);
+		$values = [$table];
 		return $this->query($sql,$values);
 	}
 
@@ -78,7 +78,7 @@ SQL;
 		$c->pk				= ($column['pk'] ? true : false);
 		$c->auto_increment	= false;
 
-		if (substr($column['type'],0,9) == 'timestamp')
+		if (str_starts_with($column['type'], 'timestamp'))
 		{
 			$c->raw_type = 'datetime';
 			$c->length = 19;
@@ -120,19 +120,19 @@ SQL;
 
 	public function native_database_types()
 	{
-		return array(
+		return [
 			'primary_key' => 'serial primary key',
-			'string' => array('name' => 'character varying', 'length' => 255),
-			'text' => array('name' => 'text'),
-			'integer' => array('name' => 'integer'),
-			'float' => array('name' => 'float'),
-			'datetime' => array('name' => 'datetime'),
-			'timestamp' => array('name' => 'timestamp'),
-			'time' => array('name' => 'time'),
-			'date' => array('name' => 'date'),
-			'binary' => array('name' => 'binary'),
-			'boolean' => array('name' => 'boolean')
-		);
+			'string' => ['name' => 'character varying', 'length' => 255],
+			'text' => ['name' => 'text'],
+			'integer' => ['name' => 'integer'],
+			'float' => ['name' => 'float'],
+			'datetime' => ['name' => 'datetime'],
+			'timestamp' => ['name' => 'timestamp'],
+			'time' => ['name' => 'time'],
+			'date' => ['name' => 'date'],
+			'binary' => ['name' => 'binary'],
+			'boolean' => ['name' => 'boolean']
+		];
 	}
 
 }

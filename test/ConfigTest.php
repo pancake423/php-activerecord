@@ -24,7 +24,7 @@ class ConfigTest extends SnakeCase_PHPUnit_Framework_TestCase
 	public function set_up()
 	{
 		$this->config = new Config();
-		$this->connections = array('development' => 'mysql://blah/development', 'test' => 'mysql://blah/test');
+		$this->connections = ['development' => 'mysql://blah/development', 'test' => 'mysql://blah/test'];
 		$this->config->set_connections($this->connections);
 	}
 
@@ -72,7 +72,7 @@ class ConfigTest extends SnakeCase_PHPUnit_Framework_TestCase
 
 	public function test_default_connection_is_set_when_only_one_connection_is_present()
 	{
-		$this->config->set_connections(array('development' => $this->connections['development']));
+		$this->config->set_connections(['development' => $this->connections['development']]);
 		$this->assert_equals('development',$this->config->get_default_connection());
 	}
 
@@ -84,7 +84,7 @@ class ConfigTest extends SnakeCase_PHPUnit_Framework_TestCase
 
 	public function test_get_date_class_with_default()
 	{
-		$this->assert_equals('ActiveRecord\\DateTime', $this->config->get_date_class());
+		$this->assert_equals(\ActiveRecord\DateTime::class, $this->config->get_date_class());
 	}
 
 	/**
@@ -121,10 +121,10 @@ class ConfigTest extends SnakeCase_PHPUnit_Framework_TestCase
 	{
 		$test = $this;
 
-		Config::initialize(function($cfg) use ($test)
+		Config::initialize(function($cfg) use ($test): void
 		{
 			$test->assert_not_null($cfg);
-			$test->assert_equals('ActiveRecord\Config',get_class($cfg));
+			$test->assert_equals(\ActiveRecord\Config::class,$cfg::class);
 		});
 	}
 

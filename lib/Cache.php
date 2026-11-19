@@ -11,7 +11,7 @@ use Closure;
 class Cache
 {
 	static $adapter = null;
-	static $options = array();
+	static $options = [];
 
 	/**
 	 * Initializes the cache.
@@ -37,7 +37,7 @@ class Cache
 	 * @param string $url URL to your cache server
 	 * @param array $options Specify additional options
 	 */
-	public static function initialize($url, $options=array())
+	public static function initialize($url, $options=[])
 	{
 		if ($url)
 		{
@@ -50,7 +50,7 @@ class Cache
 		else
 			static::$adapter = null;
 
-		static::$options = array_merge(array('expire' => 30, 'namespace' => ''),$options);
+		static::$options = array_merge(['expire' => 30, 'namespace' => ''],$options);
 	}
 
 	public static function flush()
@@ -72,10 +72,7 @@ class Cache
 		if (!static::$adapter)
 			return $closure();
 
-		if (is_null($expire))
-		{
-			$expire = static::$options['expire'];
-		}
+		$expire ??= static::$options['expire'];
 
 		$key = static::get_namespace() . $key;
 
@@ -90,10 +87,7 @@ class Cache
 		if (!static::$adapter)
 			return;
 
-		if (is_null($expire))
-		{
-			$expire = static::$options['expire'];
-		}
+		$expire ??= static::$options['expire'];
 
 		$key = static::get_namespace() . $key;
 		return static::$adapter->write($key, $var, $expire);

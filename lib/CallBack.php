@@ -63,7 +63,7 @@ class CallBack
 	 *
 	 * @var array
 	 */
-	static protected $VALID_CALLBACKS = array(
+	static protected $VALID_CALLBACKS = [
 		'after_construct',
 		'before_save',
 		'after_save',
@@ -79,7 +79,7 @@ class CallBack
 		'after_validation_on_update',
 		'before_destroy',
 		'after_destroy'
-	);
+	];
 
 	/**
 	 * Container for reflection class of given model
@@ -99,7 +99,7 @@ class CallBack
 	 *
 	 * @var array
 	 */
-	private $registry = array();
+	private $registry = [];
 
 	/**
 	 * Creates a CallBack.
@@ -117,7 +117,7 @@ class CallBack
 			if (($definition = $this->klass->getStaticPropertyValue($name,null)))
 			{
 				if (!is_array($definition))
-					$definition = array($definition);
+					$definition = [$definition];
 
 				foreach ($definition as $method_name)
 					$this->register($name,$method_name);
@@ -139,7 +139,7 @@ class CallBack
 	 */
 	public function get_callbacks($name)
 	{
-		return isset($this->registry[$name]) ? $this->registry[$name] : null;
+		return $this->registry[$name] ?? null;
 	}
 
 	/**
@@ -159,12 +159,12 @@ class CallBack
 	public function invoke($model, $name, $must_exist=true)
 	{
 		if ($must_exist && !array_key_exists($name, $this->registry))
-			throw new ActiveRecordException("No callbacks were defined for: $name on " . get_class($model));
+			throw new ActiveRecordException("No callbacks were defined for: $name on " . $model::class);
 
 		// if it doesn't exist it might be a /(after|before)_(create|update)/ so we still need to run the save
 		// callback
 		if (!array_key_exists($name, $this->registry))
-			$registry = array();
+			$registry = [];
 		else
 			$registry = $this->registry[$name];
 
@@ -173,12 +173,11 @@ class CallBack
 		// starts with /(after|before)_(create|update)/
 		if (($first == 'after_' || $first == 'before') && (($second = substr($name,7,5)) == 'creat' || $second == 'updat' || $second == 'reate' || $second == 'pdate'))
 		{
-			$temporal_save = str_replace(array('create', 'update'), 'save', $name);
+			$temporal_save = str_replace(['create', 'update'], 'save', $name);
 
-			if (!isset($this->registry[$temporal_save]))
-				$this->registry[$temporal_save] = array();
+			$this->registry[$temporal_save] ??= [];
 
-			$registry = array_merge($this->registry[$temporal_save], $registry ? $registry : array());
+			$registry = array_merge($this->registry[$temporal_save], $registry ?: []);
 		}
 
 		if ($registry)
@@ -208,9 +207,9 @@ class CallBack
 	 * @return void
 	 * @throws ActiveRecordException if invalid callback type or callback method was not found
 	 */
-	public function register($name, $closure_or_method_name=null, $options=array())
+	public function register($name, $closure_or_method_name=null, $options=[])
 	{
-		$options = array_merge(array('prepend' => false), $options);
+		$options = array_merge(['prepend' => false], $options);
 
 		if (!$closure_or_method_name)
 			$closure_or_method_name = $name;
@@ -240,8 +239,7 @@ class CallBack
 			}
 		}
 
-		if (!isset($this->registry[$name]))
-			$this->registry[$name] = array();
+		$this->registry[$name] ??= [];
 
 		if ($options['prepend'])
 			array_unshift($this->registry[$name], $closure_or_method_name);
