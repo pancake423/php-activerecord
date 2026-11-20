@@ -1,6 +1,5 @@
 <?php
 
-use ActiveRecord\ValidationsArgumentError;
 
 class BookFormat extends ActiveRecord\Model
 {

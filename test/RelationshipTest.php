@@ -1,8 +1,5 @@
 <?php
 
-use ActiveRecord\HasManyThroughAssociationException;
-use ActiveRecord\RecordNotFound;
-use ActiveRecord\RelationshipException;
 
 class NotModel {};
 

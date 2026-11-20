@@ -564,7 +564,7 @@ abstract class Connection
 	 * Specifies whether or not adapter can use LIMIT/ORDER clauses with DELETE & UPDATE operations
 	 *
 	 * @internal
-	 * @returns boolean (FALSE by default)
+	 * @return boolean (FALSE by default)
 	 */
 	public function accepts_limit_and_order_for_update_and_delete()
 	{

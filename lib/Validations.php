@@ -9,7 +9,6 @@
  */
 
 namespace ActiveRecord;
-use ActiveRecord\Model;
 use IteratorAggregate;
 use ArrayIterator;
 use Traversable;

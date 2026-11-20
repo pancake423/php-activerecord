@@ -142,7 +142,7 @@ class ActiveRecordWriteTest extends DatabaseTestCase
 	{
 	$this->expectException(ActiveRecord\UndefinedPropertyException::class);
 		$book = Book::find(1);
-		$book->update_attributes(['name' => 'new name', 'invalid_attribute' => true , 'another_invalid_attribute' => 'blah']);
+		$book->update_attributes(['name' => 'new name', 'invalid_attribute' => true, 'another_invalid_attribute' => 'blah']);
 	}
 
 	public function test_update_attribute()

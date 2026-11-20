@@ -1,5 +1,4 @@
 <?php
-use ActiveRecord\Column;
 
 require_once __DIR__ . '/../lib/adapters/PgsqlAdapter.php';
 

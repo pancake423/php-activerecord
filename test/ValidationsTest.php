@@ -1,6 +1,5 @@
 <?php
 
-use ActiveRecord as AR;
 
 class BookValidations extends ActiveRecord\Model
 {
