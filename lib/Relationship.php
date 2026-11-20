@@ -19,7 +19,7 @@ interface InterfaceRelationship
  *
  * @see http://www.phpactiverecord.org/guides/associations
  */
-abstract class AbstractRelationship implements InterfaceRelationship
+abstract class AbstractRelationship extends \stdClass implements InterfaceRelationship
 {
     /**
      * Name to be used that will trigger call to the relationship.
