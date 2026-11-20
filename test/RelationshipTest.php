@@ -13,7 +13,7 @@ class AuthorWithNonModelRelationship extends ActiveRecord\Model
 	static $has_many = [['books', 'class_name' => 'NotModel']];
 }
 
-class RelationshipTest extends DatabaseTest
+class RelationshipTest extends DatabaseTestCase
 {
 	protected $relationship_name;
 	protected $relationship_names = ['has_many', 'belongs_to', 'has_one'];
@@ -28,11 +28,13 @@ class RelationshipTest extends DatabaseTest
 		Employee::$has_one = [['position']];
 		Host::$has_many = [['events', 'order' => 'id asc']];
 
-		foreach ($this->relationship_names as $name)
-		{
-			if (preg_match("/$name/", $this->getName(), $match))
-				$this->relationship_name = $match[0];
-		}
+		// I have no idea how getName() was supposed to work here.
+		//
+		// foreach ($this->relationship_names as $name)
+		// {
+		// 	if (preg_match("/$name/", $this->getName(), $match))
+		// 		$this->relationship_name = $match[0];
+		// }
 	}
 
 	protected function get_relationship($type=null)
@@ -40,14 +42,11 @@ class RelationshipTest extends DatabaseTest
 		if (!$type)
 			$type = $this->relationship_name;
 
-		$ret = match ($type) {
+		return match ($type) {
             'belongs_to' => Event::find(5),
             'has_one' => Employee::find(1),
             'has_many' => Venue::find(2),
-            default => $ret,
         };
-
-		return $ret;
 	}
 
 	protected function assert_default_belongs_to($event, $association_name='venue')
@@ -74,7 +73,7 @@ class RelationshipTest extends DatabaseTest
 
 	public function test_has_many_basic()
 	{
-		$this->assert_default_has_many($this->get_relationship());
+		$this->assert_default_has_many($this->get_relationship("has_many"));
 	}
 
 	public function test_gh_256_eager_loading_three_levels_deep()
@@ -118,7 +117,7 @@ class RelationshipTest extends DatabaseTest
 
 	public function test_belongs_to_basic()
 	{
-		$this->assert_default_belongs_to($this->get_relationship());
+		$this->assert_default_belongs_to($this->get_relationship("belongs_to"));
 	}
 
 	public function test_belongs_to_returns_null_when_no_record()
@@ -136,7 +135,7 @@ class RelationshipTest extends DatabaseTest
 	public function test_belongs_to_with_explicit_class_name()
 	{
 		Event::$belongs_to = [['explicit_class_name', 'class_name' => 'Venue']];
-		$this->assert_default_belongs_to($this->get_relationship(), 'explicit_class_name');
+		$this->assert_default_belongs_to($this->get_relationship("belongs_to"), 'explicit_class_name');
 	}
 
 	public function test_belongs_to_with_explicit_foreign_key()
@@ -154,7 +153,7 @@ class RelationshipTest extends DatabaseTest
 	public function test_belongs_to_with_select()
 	{
 		Event::$belongs_to[0]['select'] = 'id, city';
-		$event = $this->get_relationship();
+		$event = $this->get_relationship("belongs_to");
 		$this->assert_default_belongs_to($event);
 
 		try {
@@ -168,7 +167,7 @@ class RelationshipTest extends DatabaseTest
 	public function test_belongs_to_with_readonly()
 	{
 		Event::$belongs_to[0]['readonly'] = true;
-		$event = $this->get_relationship();
+		$event = $this->get_relationship("belongs_to");
 		$this->assert_default_belongs_to($event);
 
 		try {
@@ -184,13 +183,13 @@ class RelationshipTest extends DatabaseTest
 	public function test_belongs_to_with_plural_attribute_name()
 	{
 		Event::$belongs_to = [['venues', 'class_name' => 'Venue']];
-		$this->assert_default_belongs_to($this->get_relationship(), 'venues');
+		$this->assert_default_belongs_to($this->get_relationship("belongs_to"), 'venues');
 	}
 
 	public function test_belongs_to_with_conditions_and_non_qualifying_record()
 	{
 		Event::$belongs_to[0]['conditions'] = "state = 'NY'";
-		$event = $this->get_relationship();
+		$event = $this->get_relationship("belongs_to");
 		$this->assert_equals(5,$event->id);
 		$this->assert_null($event->venue);
 	}
@@ -198,12 +197,12 @@ class RelationshipTest extends DatabaseTest
 	public function test_belongs_to_with_conditions_and_qualifying_record()
 	{
 		Event::$belongs_to[0]['conditions'] = "state = 'PA'";
-		$this->assert_default_belongs_to($this->get_relationship());
+		$this->assert_default_belongs_to($this->get_relationship("belongs_to"));
 	}
 
 	public function test_belongs_to_build_association()
 	{
-		$event = $this->get_relationship();
+		$event = $this->get_relationship("belongs_to");
 		$values = ['city' => 'Richmond', 'state' => 'VA'];
 		$venue = $event->build_venue($values);
 		$this->assert_equals($values, array_intersect_key($values, $venue->attributes()));
@@ -218,7 +217,7 @@ class RelationshipTest extends DatabaseTest
 
 	public function test_belongs_to_create_association()
 	{
-		$event = $this->get_relationship();
+		$event = $this->get_relationship("belongs_to");
 		$values = ['city' => 'Richmond', 'state' => 'VA', 'name' => 'Club 54', 'address' => '123 street'];
 		$venue = $event->create_venue($values);
 		$this->assert_not_null($venue->id);
@@ -252,13 +251,13 @@ class RelationshipTest extends DatabaseTest
 	public function test_has_many_with_explicit_class_name()
 	{
 		Venue::$has_many = [['explicit_class_name', 'class_name' => 'Event', 'order' => 'id asc']];;
-		$this->assert_default_has_many($this->get_relationship(), 'explicit_class_name');
+		$this->assert_default_has_many($this->get_relationship("has_many"), 'explicit_class_name');
 	}
 
 	public function test_has_many_with_select()
 	{
 		Venue::$has_many[0]['select'] = 'title, type';
-		$venue = $this->get_relationship();
+		$venue = $this->get_relationship("has_many");
 		$this->assert_default_has_many($venue);
 
 		try {
@@ -272,7 +271,7 @@ class RelationshipTest extends DatabaseTest
 	public function test_has_many_with_readonly()
 	{
 		Venue::$has_many[0]['readonly'] = true;
-		$venue = $this->get_relationship();
+		$venue = $this->get_relationship("has_many");
 		$this->assert_default_has_many($venue);
 
 		try {
@@ -288,13 +287,13 @@ class RelationshipTest extends DatabaseTest
 	public function test_has_many_with_singular_attribute_name()
 	{
 		Venue::$has_many = [['event', 'class_name' => 'Event', 'order' => 'id asc']];
-		$this->assert_default_has_many($this->get_relationship(), 'event');
+		$this->assert_default_has_many($this->get_relationship("has_many"), 'event');
 	}
 
 	public function test_has_many_with_conditions_and_non_qualifying_record()
 	{
 		Venue::$has_many[0]['conditions'] = "title = 'pr0n @ railsconf'";
-		$venue = $this->get_relationship();
+		$venue = $this->get_relationship("has_many");
 		$this->assert_equals(2,$venue->id);
 		$this->assert_true(empty($venue->events), is_array($venue->events));
 	}
@@ -302,7 +301,7 @@ class RelationshipTest extends DatabaseTest
 	public function test_has_many_with_conditions_and_qualifying_record()
 	{
 		Venue::$has_many[0]['conditions'] = "title = 'Yeah Yeah Yeahs'";
-		$venue = $this->get_relationship();
+		$venue = $this->get_relationship("has_many");
 		$this->assert_equals(2,$venue->id);
 		$this->assert_equals($venue->events[0]->title,'Yeah Yeah Yeahs');
 	}
@@ -349,7 +348,7 @@ class RelationshipTest extends DatabaseTest
 		Event::$belongs_to = [['host']];
 		Venue::$has_many[1] = ['hosts', 'through' => 'blahhhhhhh'];
 
-		$venue = $this->get_relationship();
+		$venue = $this->get_relationship("has_many");
 		$n = $venue->hosts;
 		$this->assert_true(count($n) > 0);
 	}
@@ -359,7 +358,7 @@ class RelationshipTest extends DatabaseTest
 		Event::$belongs_to = [['host']];
 		Venue::$has_many[1] = ['hosts', 'through' => 'events', 'select' => 'hosts.*, events.*'];
 
-		$venue = $this->get_relationship();
+		$venue = $this->get_relationship("has_many");
 		$this->assert_true(count($venue->hosts) > 0);
 		$this->assert_not_null($venue->hosts[0]->title);
 	}
@@ -369,7 +368,7 @@ class RelationshipTest extends DatabaseTest
 		Event::$belongs_to = [['host']];
 		Venue::$has_many[1] = ['hosts', 'through' => 'events', 'conditions' => ['events.title != ?', 'Love Overboard']];
 
-		$venue = $this->get_relationship();
+		$venue = $this->get_relationship("has_many");
 		$this->assert_true(count($venue->hosts) === 1);
 		$this->assert_sql_has("events.title !=",ActiveRecord\Table::load('Host')->last_sql);
 	}
@@ -379,7 +378,7 @@ class RelationshipTest extends DatabaseTest
 		Event::$belongs_to = [['host']];
 		Venue::$has_many[1] = ['hostess', 'through' => 'events', 'source' => 'host'];
 
-		$venue = $this->get_relationship();
+		$venue = $this->get_relationship("has_many");
 		$this->assert_true(count($venue->hostess) > 0);
 	}
 
@@ -390,7 +389,7 @@ class RelationshipTest extends DatabaseTest
 		Venue::$has_one = [['invalid_assoc']];
 		Venue::$has_many[1] = ['hosts', 'through' => 'invalid_assoc'];
 
-		$this->get_relationship()->hosts;
+		$this->get_relationship("has_many")->hosts;
 	}
 
 	public function test_has_many_with_joins()
@@ -414,19 +413,19 @@ class RelationshipTest extends DatabaseTest
 
 	public function test_has_one_basic()
 	{
-		$this->assert_default_has_one($this->get_relationship());
+		$this->assert_default_has_one($this->get_relationship("has_one"));
 	}
 
 	public function test_has_one_with_explicit_class_name()
 	{
 		Employee::$has_one = [['explicit_class_name', 'class_name' => 'Position']];
-		$this->assert_default_has_one($this->get_relationship(), 'explicit_class_name');
+		$this->assert_default_has_one($this->get_relationship("has_one"), 'explicit_class_name');
 	}
 
 	public function test_has_one_with_select()
 	{
 		Employee::$has_one[0]['select'] = 'title';
-		$employee = $this->get_relationship();
+		$employee = $this->get_relationship("has_one");
 		$this->assert_default_has_one($employee);
 
 		try {
@@ -440,7 +439,7 @@ class RelationshipTest extends DatabaseTest
 	public function test_has_one_with_order()
 	{
 		Employee::$has_one[0]['order'] = 'title';
-		$employee = $this->get_relationship();
+		$employee = $this->get_relationship("has_one");
 		$this->assert_default_has_one($employee);
 		$this->assert_sql_has('ORDER BY title',Position::table()->last_sql);
 	}
@@ -448,7 +447,7 @@ class RelationshipTest extends DatabaseTest
 	public function test_has_one_with_conditions_and_non_qualifying_record()
 	{
 		Employee::$has_one[0]['conditions'] = "title = 'programmer'";
-		$employee = $this->get_relationship();
+		$employee = $this->get_relationship("has_one");
 		$this->assert_equals(1,$employee->id);
 		$this->assert_null($employee->position);
 	}
@@ -456,13 +455,13 @@ class RelationshipTest extends DatabaseTest
 	public function test_has_one_with_conditions_and_qualifying_record()
 	{
 		Employee::$has_one[0]['conditions'] = "title = 'physicist'";
-		$this->assert_default_has_one($this->get_relationship());
+		$this->assert_default_has_one($this->get_relationship("has_one"));
 	}
 
 	public function test_has_one_with_readonly()
 	{
 		Employee::$has_one[0]['readonly'] = true;
-		$employee = $this->get_relationship();
+		$employee = $this->get_relationship("has_one");
 		$this->assert_default_has_one($employee);
 
 		try {
@@ -563,7 +562,7 @@ class RelationshipTest extends DatabaseTest
 
 		foreach ($assocs as $assoc)
 		{
-			$this->assert_internal_type('array', $authors[0]->$assoc);
+			$this->assertIsArray($authors[0]->$assoc);
 
 			foreach ($authors[0]->$assoc as $a)
 				$this->assert_equals($authors[0]->author_id,$a->author_id);
@@ -571,7 +570,7 @@ class RelationshipTest extends DatabaseTest
 
 		foreach ($assocs as $assoc)
 		{
-			$this->assert_internal_type('array', $authors[1]->$assoc);
+			$this->assertIsArray($authors[1]->$assoc);
 			$this->assert_true(empty($authors[1]->$assoc));
 		}
 

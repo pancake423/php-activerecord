@@ -3,7 +3,7 @@ require_once __DIR__ . '/../lib/Serialization.php';
 
 use ActiveRecord\DateTime;
 
-class SerializationTest extends DatabaseTest
+class SerializationTest extends DatabaseTestCase
 {
 	public function tear_down()
 	{
@@ -163,7 +163,7 @@ class SerializationTest extends DatabaseTest
 
 	public function test_only_method()
 	{
-		$this->assert_contains('<sharks>lasers</sharks>', Author::first()->to_xml(['only_method' => 'return_something']));
+		$this->assertStringContainsString('<sharks>lasers</sharks>', Author::first()->to_xml(['only_method' => 'return_something']));
 	}
 
   public function test_to_csv()

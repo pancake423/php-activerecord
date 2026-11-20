@@ -21,8 +21,8 @@ require_once 'vendor/autoload.php';
 
 require_once 'SnakeCase_PHPUnit_Framework_TestCase.php';
 
-require_once 'DatabaseTest.php';
-require_once 'AdapterTest.php';
+require_once 'DatabaseTestCase.php';
+require_once 'AdapterTestCase.php';
 
 require_once __DIR__ . '/../../ActiveRecord.php';
 
@@ -34,7 +34,7 @@ $GLOBALS['show_warnings'] = true;
 
 
 if (getenv('LOG') !== 'false')
-	DatabaseTest::$log = true;
+	DatabaseTestCase::$log = true;
 
 ActiveRecord\Config::initialize(function($cfg): void
 {
@@ -67,7 +67,7 @@ ActiveRecord\Config::initialize(function($cfg): void
 		if ($GLOBALS['show_warnings'] && !isset($GLOBALS['show_warnings_done']))
 			echo "(Logging SQL queries disabled, PEAR::Log not found.)\n";
 
-		DatabaseTest::$log = false;
+		DatabaseTestCase::$log = false;
 	}
 
 	if ($GLOBALS['show_warnings']  && !isset($GLOBALS['show_warnings_done']))

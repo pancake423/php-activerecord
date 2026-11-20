@@ -21,6 +21,9 @@ class TestDateTime
 
 class ConfigTest extends SnakeCase_PHPUnit_Framework_TestCase
 {
+    protected $config;
+    protected $connections;
+
 	public function set_up()
 	{
 		$this->config = new Config();

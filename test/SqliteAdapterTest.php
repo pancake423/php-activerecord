@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../lib/adapters/SqliteAdapter.php';
 
-class SqliteAdapterTest extends AdapterTest
+class SqliteAdapterTest extends AdapterTestCase
 {
 	public function set_up($connection_name=null)
 	{

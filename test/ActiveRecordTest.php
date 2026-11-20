@@ -1,6 +1,6 @@
 <?php
 
-class ActiveRecordTest extends DatabaseTest
+class ActiveRecordTest extends DatabaseTestCase
 {
     public function set_up($connection_name = null)
     {
@@ -19,6 +19,7 @@ class ActiveRecordTest extends DatabaseTest
 
     public function test_options_hash_with_unknown_keys()
     {
+        $this->expectException(ActiveRecord\ActiveRecordException::class);
         $this->assert_false(
             Author::is_options_hash([
                 "conditions" => "blah",
@@ -26,7 +27,6 @@ class ActiveRecordTest extends DatabaseTest
                 "dubya" => "bush",
             ]),
         );
-        $this->expectException(ActiveRecord\ActiveRecordException::class);
     }
 
     public function test_options_is_hash()

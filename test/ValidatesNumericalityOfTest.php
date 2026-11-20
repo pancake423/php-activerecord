@@ -9,7 +9,7 @@ class BookNumericality extends ActiveRecord\Model
 	];
 }
 
-class ValidatesNumericalityOfTest extends DatabaseTest
+class ValidatesNumericalityOfTest extends DatabaseTestCase
 {
 	static $NULL = [null];
 	static $BLANK = ["", " ", " \t \r \n"];

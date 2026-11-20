@@ -1,7 +1,7 @@
 <?php
 use ActiveRecord\Cache;
 
-class CacheModelTest extends DatabaseTest
+class CacheModelTest extends DatabaseTestCase
 {
 	public function set_up($connection_name=null)
 	{

@@ -12,6 +12,7 @@ namespace ActiveRecord;
 use ActiveRecord\Model;
 use IteratorAggregate;
 use ArrayIterator;
+use Traversable;
 
 /**
  * Manages validations for a {@link Model}.
@@ -43,7 +44,8 @@ class Validations
 {
 	private $options = [];
 	private $validators = [];
-	private $record;
+    private $record;
+	private $klass;
 
 	private static $VALIDATION_FUNCTIONS = [
 		'validates_presence_of',
@@ -136,7 +138,7 @@ class Validations
 		foreach ($this->validators as $validate)
 		{
 			$definition = $this->klass->getStaticPropertyValue($validate);
-			$this->{$validate}();
+			$this->{$validate}($definition);
 		}
 
 		$model_reflection = Reflections::instance()->get($this->model);
@@ -176,7 +178,7 @@ class Validations
 
 		foreach ($attrs as $attr)
 		{
-			$options = array_merge($configuration, $attr);
+			$options = array_merge($configuration, is_array($attr) ? $attr : [$attr]);
 			$this->record->add_on_blank($options[0], $options['message']);
 		}
 	}
@@ -568,7 +570,7 @@ class Validations
 
 		foreach ($attrs as $attr)
 		{
-			$options = array_merge($configuration, $attr);
+			$options = array_merge($configuration, is_array($attr) ? $attr : [$attr]);
 			$pk = $this->model->get_primary_key();
 			$pk_value = $this->model->{$pk[0]};
 
@@ -899,9 +901,8 @@ class Errors implements IteratorAggregate, \Stringable
 	 *   echo "$msg\n";
 	 * </code>
 	 *
-	 * @return ArrayIterator
 	 */
-	public function getIterator()
+	public function getIterator(): Traversable
 	{
 		return new ArrayIterator($this->full_messages());
 	}

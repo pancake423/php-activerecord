@@ -1,8 +1,7 @@
 <?php
 use ActiveRecord\Column;
-use ActiveRecord\DatabaseException;
 
-class AdapterTest extends DatabaseTest
+class AdapterTestCase extends DatabaseTestCase
 {
     const InvalidDb = "__1337__invalid_db__";
 

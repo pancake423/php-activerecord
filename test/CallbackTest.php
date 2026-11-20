@@ -1,6 +1,6 @@
 <?php
 
-class CallBackTest extends DatabaseTest
+class CallBackTest extends DatabaseTestCase
 {
 	public function set_up($connection_name=null)
 	{
@@ -155,7 +155,7 @@ class CallBackTest extends DatabaseTest
 
 	public function test_invoke_runs_all_callbacks()
 	{
-		$mock = $this->get_mock('VenueCB',['after_destroy_one','after_destroy_two']);
+		$mock = $this->createMock('VenueCB',['after_destroy_one','after_destroy_two']);
 		$mock->expects($this->once())->method('after_destroy_one');
 		$mock->expects($this->once())->method('after_destroy_two');
 		$this->callback->invoke($mock,'after_destroy');
@@ -180,7 +180,7 @@ class CallBackTest extends DatabaseTest
 	public function test_invoke_unregistered_callback()
 	{
 	$this->expectException(ActiveRecord\ActiveRecordException::class);
-		$mock = $this->get_mock('VenueCB', ['columns']);
+		$mock = $this->createMock('VenueCB', ['columns']);
 		$this->callback->invoke($mock,'before_validation_on_create');
 	}
 

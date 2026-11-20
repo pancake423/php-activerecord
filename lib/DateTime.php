@@ -183,7 +183,7 @@ class DateTime extends \DateTime implements
     public function setTimestamp($unixtimestamp): self
     {
         $this->flag_dirty();
-        call_user_func_array([$this, "parent::setTimestamp"], func_get_args());
+        parent::setTimestamp(...);
         return $this;
     }
 }

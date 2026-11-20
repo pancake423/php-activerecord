@@ -1,13 +1,17 @@
 <?php
 require_once __DIR__ . "/DatabaseLoader.php";
 
-class DatabaseTest extends SnakeCase_PHPUnit_Framework_TestCase
+class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
 {
     protected $conn;
     public static $log = false;
     public static $db;
 
-    public function set_up($connection_name = "sqlite")
+    protected $original_default_connection;
+    protected $original_date_class;
+    protected $connection_name;
+
+    public function set_up($connection_name = null)
     {
         ActiveRecord\Table::clear_cache();
 
@@ -75,7 +79,7 @@ class DatabaseTest extends SnakeCase_PHPUnit_Framework_TestCase
             $message = $e->getMessage();
         }
 
-        $this->assertContains($contains, $message);
+        $this->assertStringContainsString($contains, $message);
     }
 
     /**
@@ -88,14 +92,14 @@ class DatabaseTest extends SnakeCase_PHPUnit_Framework_TestCase
     {
         $needle = str_replace(['"', "`"], "", $needle);
         $haystack = str_replace(['"', "`"], "", $haystack);
-        return $this->assertContains($needle, $haystack);
+        return $this->assertStringContainsString($needle, $haystack);
     }
 
     public function assert_sql_doesnt_has($needle, $haystack)
     {
         $needle = str_replace(['"', "`"], "", $needle);
         $haystack = str_replace(['"', "`"], "", $haystack);
-        return $this->assertNotContains($needle, $haystack);
+        return $this->assertStringNotContainsString($needle, $haystack);
     }
 
     public function test_true()

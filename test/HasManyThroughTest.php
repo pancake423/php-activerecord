@@ -4,7 +4,7 @@ include 'helpers/foo.php';
 use foo\bar\biz\User;
 use foo\bar\biz\Newsletter;
 
-class HasManyThroughTest extends DatabaseTest
+class HasManyThroughTest extends DatabaseTestCase
 {
 	public function test_gh101_has_many_through()
 	{

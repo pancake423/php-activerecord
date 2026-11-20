@@ -18,7 +18,7 @@ class AuthorPresence extends ActiveRecord\Model
 	];
 };
 
-class ValidatesPresenceOfTest extends DatabaseTest
+class ValidatesPresenceOfTest extends DatabaseTestCase
 {
 	public function test_presence()
 	{
@@ -37,7 +37,7 @@ class ValidatesPresenceOfTest extends DatabaseTest
 		$author = new AuthorPresence();
 		$this->assert_false($author->is_valid());
 	}
-	
+
 	public function test_invalid_null()
 	{
 		$book = new BookPresence(['name' => null]);

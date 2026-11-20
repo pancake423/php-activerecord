@@ -279,7 +279,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 		if (!has_absolute_namespace($class_name) && isset($this->options['namespace'])) {
 			$class_name = $this->options['namespace'].'\\'.$class_name;
 		}
-		
+
 		$reflection = Reflections::instance()->add($class_name)->get($class_name);
 
 		if (!$reflection->isSubClassOf(\ActiveRecord\Model::class))
@@ -290,7 +290,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 
 	protected function create_conditions_from_keys(Model $model, $condition_keys=[], $value_keys=[])
 	{
-		$condition_string = implode('_and_', $condition_keys);
+		$condition_string = implode('_and_', $condition_keys ?? []);
 		$condition_values = array_values($model->get_values_for($value_keys));
 
 		// return null if all the foreign key values are null so that we don't try to do a query like "id is null"
@@ -362,42 +362,42 @@ abstract class AbstractRelationship implements InterfaceRelationship
 			$aliased_join_table_name = $join_table_name;
 
 		$on_clause = "$from_table_name.$foreign_key = $aliased_join_table_name.$join_primary_key";
-		
+
 		#append association conditions if they exist
 		if(array_key_exists('conditions',$this->options) && $conditions = $this->options['conditions']) {
 			if(count($conditions) == 1 && is_string($conditions[0])) {
 				$on_clause = "($on_clause) AND ($conditions[0])";
-			} 
+			}
 			#TODO: handle conditions as arrays
 		}
-						
+
 		return " INNER JOIN $join_table_name {$alias}ON($on_clause)";
 	}
-	
-	
+
+
 	/**
 	 * This will load the related model data.
 	 *
 	 * @param Model $model The model this relationship belongs to
 	 */
 	abstract public function load(Model $model);
-	
+
 	/**
 	 * @return bool
 	 */
-	public function is_through() 
+	public function is_through()
 	{
 		return array_key_exists('through', $this->options) && !empty($this->options['through']);
-	}	
-	
+	}
+
 	/**
-	 * Attempts to get the through Table instance from the options 
+	 * Attempts to get the through Table instance from the options
 	 * @return Table on success, null otherwise
 	 */
 	public function through_table() {
 		$options = $this->options;
 		if (empty($options['through'])) { return null; }
-			
+
 		if (!isset($options['class_name'])) {
 			$class = classify($options['through'], true);
 			if (isset($options['namespace']) && !class_exists($class)) {
@@ -409,10 +409,10 @@ abstract class AbstractRelationship implements InterfaceRelationship
 			$relation = $class::table()->get_relationship($options['through']);
 			$through_table = $relation->get_table();
 		}
-		
+
 		return $through_table;
-	}	
-	
+	}
+
 	/**
 	 * Returns the name of the association that this this relationship is through.
 	 * @return string
@@ -545,7 +545,7 @@ class HasMany extends AbstractRelationship
 				$fk = $this->foreign_key;
 
 				$this->set_keys($this->get_table()->class->getName(), true);
-				
+
 				$class = $this->class_name;
 				$relation = $class::table()->get_relationship($this->through);
 				$through_table = $relation->get_table();
@@ -722,9 +722,11 @@ class HasAndBelongsToMany extends AbstractRelationship
  */
 class BelongsTo extends AbstractRelationship
 {
-	
-	static protected $valid_association_options = ['primary_key'];
-	
+
+	protected static $valid_association_options = ['primary_key'];
+
+    protected $primary_key;
+
 	public function __construct($options=[])
 	{
 		parent::__construct($options);
@@ -735,7 +737,7 @@ class BelongsTo extends AbstractRelationship
 		//infer from class_name
 		if (!$this->foreign_key)
 			$this->foreign_key = [Inflector::instance()->keyify($this->class_name)];
-	
+
 		if (!isset($this->primary_key) && isset($this->options['primary_key']))
 			$this->primary_key = is_array($this->options['primary_key']) ? $this->options['primary_key'] : [$this->options['primary_key']];
 	}

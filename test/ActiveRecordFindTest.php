@@ -1,6 +1,6 @@
 <?php
 
-class ActiveRecordFindTest extends DatabaseTest
+class ActiveRecordFindTest extends DatabaseTestCase
 {
     public function test_find_with_no_params()
     {
@@ -326,7 +326,7 @@ class ActiveRecordFindTest extends DatabaseTest
 
     public function test_find_by_call_static_invalid_column_name()
     {
-        $this->expectException(ActiveRecord\RecordNotFound::class);
+        $this->expectException(ActiveRecord\DatabaseException::class);
         Author::find_by_sharks();
     }
 
@@ -361,7 +361,7 @@ class ActiveRecordFindTest extends DatabaseTest
 
     public function test_find_all_by_call_static_undefined_method()
     {
-        $this->expectException(ActiveRecord\RecordNotFound::class);
+        $this->expectException(ActiveRecord\ActiveRecordException::class);
         Author::find_sharks("Tito");
     }
 
@@ -377,7 +377,7 @@ class ActiveRecordFindTest extends DatabaseTest
 
     public function test_find_by_call_static_with_invalid_field_name()
     {
-        $this->expectException(ActiveRecord\RecordNotFound::class);
+        $this->expectException(ActiveRecord\DatabaseException::class);
         Author::find_by_some_invalid_field_name("Tito");
     }
 
@@ -513,7 +513,7 @@ class ActiveRecordFindTest extends DatabaseTest
 
     public function test_from_with_invalid_table()
     {
-        $this->expectException(ActiveRecord\RecordNotFound::class);
+        $this->expectException(ActiveRecord\DatabaseException::class);
         $author = Author::find("first", ["from" => "wrong_authors_table"]);
     }
 
@@ -542,7 +542,7 @@ class ActiveRecordFindTest extends DatabaseTest
 
     public function test_find_or_create_by_throws_exception_when_using_or()
     {
-        $this->expectException(ActiveRecord\RecordNotFound::class);
+        $this->expectException(ActiveRecord\ActiveRecordException::class);
         Author::find_or_create_by_name_or_encrypted_password(
             "New Guy",
             "pencil",

@@ -1,16 +1,15 @@
 <?php
 
-use ActiveRecord\Config;
 use ActiveRecord\ConnectionManager;
 
-class ConnectionManagerTest extends DatabaseTest
+class ConnectionManagerTest extends DatabaseTestCase
 {
 	public function test_get_connection_with_null_connection()
 	{
 		$this->assert_not_null(ConnectionManager::get_connection(null));
 		$this->assert_not_null(ConnectionManager::get_connection());
 	}
-    
+
 	public function test_get_connection()
 	{
 		$this->assert_not_null(ConnectionManager::get_connection('mysql'));
