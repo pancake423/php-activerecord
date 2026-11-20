@@ -97,7 +97,7 @@ class ActiveRecordFindTest extends DatabaseTestCase
 
     public function test_find_all_with_empty_array_bind_value_throws_exception()
     {
-        $this->expectException(RecordNotFound::class);
+        $this->expectException(DatabaseException::class);
         $authors = Author::find('all', [
             'conditions' => ['author_id IN(?)', []],
         ]);

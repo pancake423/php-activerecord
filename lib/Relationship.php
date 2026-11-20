@@ -483,8 +483,6 @@ class HasMany extends AbstractRelationship
      */
     protected static $valid_association_options = ['primary_key', 'order', 'group', 'having', 'limit', 'offset', 'through', 'source'];
 
-    protected $primary_key;
-
     private $has_one = false;
 
     private $through;
@@ -723,8 +721,6 @@ class HasAndBelongsToMany extends AbstractRelationship
 class BelongsTo extends AbstractRelationship
 {
     protected static $valid_association_options = ['primary_key'];
-
-    protected $primary_key;
 
     public function __construct($options = [])
     {
