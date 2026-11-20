@@ -1,8 +1,9 @@
 <?php
+
 include 'helpers/foo.php';
 
-use foo\bar\biz\User;
 use foo\bar\biz\Newsletter;
+use foo\bar\biz\User;
 
 class HasManyThroughTest extends DatabaseTestCase
 {
@@ -13,22 +14,22 @@ class HasManyThroughTest extends DatabaseTestCase
 
 		$this->assert_equals($newsletter->id, $user->newsletters[0]->id);
 		$this->assert_equals(
-			'foo\bar\biz\Newsletter',
-			$user->newsletters[0]::class
+		    'foo\bar\biz\Newsletter',
+		    $user->newsletters[0]::class
 		);
 		$this->assert_equals($user->id, $newsletter->users[0]->id);
 		$this->assert_equals(
-			'foo\bar\biz\User',
-			$newsletter->users[0]::class
+		    'foo\bar\biz\User',
+		    $newsletter->users[0]::class
 		);
 	}
 
 	public function test_gh101_has_many_through_include()
 	{
 		$user = User::find(1, [
-			'include' => [
-				'user_newsletters'
-			]
+		    'include' => [
+		        'user_newsletters',
+		    ],
 		]);
 
 		$this->assert_equals(1, $user->id);
@@ -37,19 +38,23 @@ class HasManyThroughTest extends DatabaseTestCase
 
 	public function test_gh107_has_many_through_include_eager()
 	{
-		$venue = Venue::find(1, ['include' => ['events']]);
+		$venue = Venue::find(1, [
+		    'include' => ['events'],
+		]);
 		$this->assert_equals(1, $venue->events[0]->id);
 
-		$venue = Venue::find(1, ['include' => ['hosts']]);
+		$venue = Venue::find(1, [
+		    'include' => ['hosts'],
+		]);
 		$this->assert_equals(1, $venue->hosts[0]->id);
 	}
 
 	public function test_gh107_has_many_though_include_eager_with_namespace()
 	{
 		$user = User::find(1, [
-			'include' => [
-				'newsletters'
-			]
+		    'include' => [
+		        'newsletters',
+		    ],
 		]);
 
 		$this->assert_equals(1, $user->id);

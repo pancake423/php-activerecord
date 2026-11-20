@@ -3,26 +3,40 @@
 class BookExclusion extends ActiveRecord\Model
 {
 	static $table = 'books';
+
 	public static $validates_exclusion_of = [
-		['name', 'in' => ['blah', 'alpha', 'bravo']]
+	    [
+	        'name',
+	        'in' => ['blah', 'alpha', 'bravo'],
+	    ],
 	];
 };
 
 class BookInclusion extends ActiveRecord\Model
 {
 	static $table = 'books';
+
 	public static $validates_inclusion_of = [
-		['name', 'in' => ['blah', 'tanker', 'shark']]
+	    [
+	        'name',
+	        'in' => ['blah', 'tanker', 'shark'],
+	    ],
 	];
 };
 
 class ValidatesInclusionAndExclusionOfTest extends DatabaseTestCase
 {
-	public function set_up($connection_name=null)
+	public function set_up($connection_name = null)
 	{
 		parent::set_up($connection_name);
-		BookInclusion::$validates_inclusion_of[0] = ['name', 'in' => ['blah', 'tanker', 'shark']];
-		BookExclusion::$validates_exclusion_of[0] = ['name', 'in' => ['blah', 'alpha', 'bravo']];
+		BookInclusion::$validates_inclusion_of[0] = [
+		    'name',
+		    'in' => ['blah', 'tanker', 'shark'],
+		];
+		BookExclusion::$validates_exclusion_of[0] = [
+		    'name',
+		    'in' => ['blah', 'alpha', 'bravo'],
+		];
 	}
 
 	public function test_inclusion()
@@ -67,7 +81,7 @@ class ValidatesInclusionAndExclusionOfTest extends DatabaseTestCase
 
 	public function test_inclusion_with_numeric()
 	{
-		BookInclusion::$validates_inclusion_of[0]['in']= [0, 1, 2];
+		BookInclusion::$validates_inclusion_of[0]['in'] = [0, 1, 2];
 		$book = new BookInclusion;
 		$book->name = 2;
 		$book->save();
@@ -76,7 +90,7 @@ class ValidatesInclusionAndExclusionOfTest extends DatabaseTestCase
 
 	public function test_inclusion_with_boolean()
 	{
-		BookInclusion::$validates_inclusion_of[0]['in']= [true];
+		BookInclusion::$validates_inclusion_of[0]['in'] = [true];
 		$book = new BookInclusion;
 		$book->name = true;
 		$book->save();
@@ -85,7 +99,7 @@ class ValidatesInclusionAndExclusionOfTest extends DatabaseTestCase
 
 	public function test_inclusion_with_null()
 	{
-		BookInclusion::$validates_inclusion_of[0]['in']= [null];
+		BookInclusion::$validates_inclusion_of[0]['in'] = [null];
 		$book = new BookInclusion;
 		$book->name = null;
 		$book->save();
@@ -94,7 +108,7 @@ class ValidatesInclusionAndExclusionOfTest extends DatabaseTestCase
 
 	public function test_invalid_inclusion_with_numeric()
 	{
-		BookInclusion::$validates_inclusion_of[0]['in']= [0, 1, 2];
+		BookInclusion::$validates_inclusion_of[0]['in'] = [0, 1, 2];
 		$book = new BookInclusion;
 		$book->name = 5;
 		$book->save();
@@ -103,7 +117,10 @@ class ValidatesInclusionAndExclusionOfTest extends DatabaseTestCase
 
 	public function tes_inclusion_within_option()
 	{
-		BookInclusion::$validates_inclusion_of[0] = ['name', 'within' => ['okay']];
+		BookInclusion::$validates_inclusion_of[0] = [
+		    'name',
+		    'within' => ['okay'],
+		];
 		$book = new BookInclusion;
 		$book->name = 'okay';
 		$book->save();
@@ -112,7 +129,10 @@ class ValidatesInclusionAndExclusionOfTest extends DatabaseTestCase
 
 	public function tes_inclusion_scalar_value()
 	{
-		BookInclusion::$validates_inclusion_of[0] = ['name', 'within' => 'okay'];
+		BookInclusion::$validates_inclusion_of[0] = [
+		    'name',
+		    'within' => 'okay',
+		];
 		$book = new BookInclusion;
 		$book->name = 'okay';
 		$book->save();

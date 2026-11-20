@@ -1,27 +1,22 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 
 use PDO;
 
 /**
  * Adapter for SQLite.
- *
- * @package ActiveRecord
  */
 class SqliteAdapter extends Connection
 {
-
 	static $datetime_format = 'Y-m-d H:i:s';
 
 	protected function __construct($info)
 	{
-		if (!file_exists($info->host))
+		if (! file_exists($info->host))
 			throw new DatabaseException("Could not find sqlite db: $info->host");
 
-		$this->connection = new PDO("sqlite:$info->host",null,null,static::$PDO_OPTIONS);
+		$this->connection = new PDO("sqlite:$info->host", null, null, static::$PDO_OPTIONS);
 	}
 
 	public function limit($sql, $offset, $limit)
@@ -44,21 +39,21 @@ class SqliteAdapter extends Connection
 	public function create_column($column)
 	{
 		$c = new Column();
-		$c->inflected_name  = Inflector::instance()->variablize($column['name']);
-		$c->name            = $column['name'];
-		$c->nullable        = $column['notnull'] ? false : true;
-		$c->pk              = $column['pk'] ? true : false;
-		$c->auto_increment  = in_array(
-				strtoupper($column['type']),
-				['INT', 'INTEGER']
-			) && $c->pk;
+		$c->inflected_name = Inflector::instance()->variablize($column['name']);
+		$c->name = $column['name'];
+		$c->nullable = $column['notnull'] ? false : true;
+		$c->pk = $column['pk'] ? true : false;
+		$c->auto_increment = in_array(
+		    strtoupper($column['type']),
+		    ['INT', 'INTEGER']
+		) && $c->pk;
 
-		$column['type'] = preg_replace('/ +/',' ',$column['type']);
-		$column['type'] = str_replace(['(',')'],' ',$column['type']);
-		$column['type'] = Utils::squeeze(' ',$column['type']);
-		$matches = explode(' ',$column['type']);
+		$column['type'] = preg_replace('/ +/', ' ', $column['type']);
+		$column['type'] = str_replace(['(', ')'], ' ', $column['type']);
+		$column['type'] = Utils::squeeze(' ', $column['type']);
+		$matches = explode(' ', $column['type']);
 
-		if (!empty($matches))
+		if (! empty($matches))
 		{
 			$c->raw_type = strtolower($matches[0]);
 
@@ -76,10 +71,10 @@ class SqliteAdapter extends Connection
 		// From SQLite3 docs: The value is a signed integer, stored in 1, 2, 3, 4, 6,
 		// or 8 bytes depending on the magnitude of the value.
 		// so is it ok to assume it's possible an int can always go up to 8 bytes?
-		if ($c->type == Column::INTEGER && !$c->length)
+		if ($c->type == Column::INTEGER && ! $c->length)
 			$c->length = 8;
 
-		$c->default = $c->cast($column['dflt_value'],$this);
+		$c->default = $c->cast($column['dflt_value'], $this);
 
 		return $c;
 	}
@@ -94,18 +89,41 @@ class SqliteAdapter extends Connection
 	public function native_database_types()
 	{
 		return [
-			'primary_key' => 'integer not null primary key',
-			'string' => ['name' => 'varchar', 'length' => 255],
-			'text' => ['name' => 'text'],
-			'integer' => ['name' => 'integer'],
-			'float' => ['name' => 'float'],
-			'decimal' => ['name' => 'decimal'],
-			'datetime' => ['name' => 'datetime'],
-			'timestamp' => ['name' => 'datetime'],
-			'time' => ['name' => 'time'],
-			'date' => ['name' => 'date'],
-			'binary' => ['name' => 'blob'],
-			'boolean' => ['name' => 'boolean']
+		    'primary_key' => 'integer not null primary key',
+		    'string' => [
+		        'name' => 'varchar',
+		        'length' => 255,
+		    ],
+		    'text' => [
+		        'name' => 'text',
+		    ],
+		    'integer' => [
+		        'name' => 'integer',
+		    ],
+		    'float' => [
+		        'name' => 'float',
+		    ],
+		    'decimal' => [
+		        'name' => 'decimal',
+		    ],
+		    'datetime' => [
+		        'name' => 'datetime',
+		    ],
+		    'timestamp' => [
+		        'name' => 'datetime',
+		    ],
+		    'time' => [
+		        'name' => 'time',
+		    ],
+		    'date' => [
+		        'name' => 'date',
+		    ],
+		    'binary' => [
+		        'name' => 'blob',
+		    ],
+		    'boolean' => [
+		        'name' => 'boolean',
+		    ],
 		];
 	}
 

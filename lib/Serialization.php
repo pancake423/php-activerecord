@@ -1,7 +1,5 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 use XmlWriter;
 
@@ -37,12 +35,12 @@ use XmlWriter;
  * $model->to_xml(array('except' => 'password')));
  * </code>
  *
- * @package ActiveRecord
- * @link http://www.phpactiverecord.org/guides/utilities#topic-serialization
+ * @see http://www.phpactiverecord.org/guides/utilities#topic-serialization
  */
 abstract class Serialization implements \Stringable
 {
 	protected $model;
+
 	protected $attributes;
 
 	/**
@@ -81,7 +79,7 @@ abstract class Serialization implements \Stringable
 	 * );
 	 * </code>
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $includes_with_class_name_element = false;
 
@@ -89,10 +87,13 @@ abstract class Serialization implements \Stringable
 	 * Constructs a {@link Serialization} object.
 	 *
 	 * @param Model $model The model to serialize
-	 * @param array &$options Options for serialization
+	 * @param array $options Options for serialization
 	 * @return Serialization
 	 */
-	public function __construct(Model $model, protected $options)
+	public function __construct(
+	    Model $model,
+	    protected $options
+	)
 	{
 		$this->model = $model;
 		$this->attributes = $model->attributes();
@@ -114,17 +115,17 @@ abstract class Serialization implements \Stringable
 		{
 			$this->options_to_a('only');
 
-			$exclude = array_diff(array_keys($this->attributes),$this->options['only']);
-			$this->attributes = array_diff_key($this->attributes,array_flip($exclude));
+			$exclude = array_diff(array_keys($this->attributes), $this->options['only']);
+			$this->attributes = array_diff_key($this->attributes, array_flip($exclude));
 		}
 	}
 
 	private function check_except()
 	{
-		if (isset($this->options['except']) && !isset($this->options['only']))
+		if (isset($this->options['except']) && ! isset($this->options['only']))
 		{
 			$this->options_to_a('except');
-			$this->attributes = array_diff_key($this->attributes,array_flip($this->options['except']));
+			$this->attributes = array_diff_key($this->attributes, array_flip($this->options['except']));
 		}
 	}
 
@@ -141,7 +142,7 @@ abstract class Serialization implements \Stringable
 			}
 		}
 	}
-	
+
 	private function check_only_method()
 	{
 		if (isset($this->options['only_method']))
@@ -162,7 +163,7 @@ abstract class Serialization implements \Stringable
 
 			foreach ($this->options['include'] as $association => $options)
 			{
-				if (!is_array($options))
+				if (! is_array($options))
 				{
 					$association = $options;
 					$options = [];
@@ -175,16 +176,15 @@ abstract class Serialization implements \Stringable
 					{
 						$this->attributes[$association] = null;
 					}
-					elseif (!is_array($assoc))
+					elseif (! is_array($assoc))
 					{
 						if ($assoc)
 						{
 							$serialized = new $serializer_class($assoc, $options);
-							$this->attributes[$association] = $serialized->to_a();;
+							$this->attributes[$association] = $serialized->to_a(); ;
 						}
 					}
-					else
-					{
+					else {
 						$includes = [];
 
 						foreach ($assoc as $a)
@@ -193,15 +193,14 @@ abstract class Serialization implements \Stringable
 
 							if ($this->includes_with_class_name_element)
 								$includes[strtolower($a::class)][] = $serialized->to_a();
-							else
-								$includes[] = $serialized->to_a();
+							else $includes[] = $serialized->to_a();
 						}
 
 						$this->attributes[$association] = $includes;
 					}
 
 				} catch (UndefinedPropertyException) {
-					;//move along
+					; // move along
 				}
 			}
 		}
@@ -209,7 +208,7 @@ abstract class Serialization implements \Stringable
 
 	final protected function options_to_a($key)
 	{
-		if (!is_array($this->options[$key]))
+		if (! is_array($this->options[$key]))
 			$this->options[$key] = [$this->options[$key]];
 	}
 
@@ -231,7 +230,6 @@ abstract class Serialization implements \Stringable
 	/**
 	 * Returns the serialized object as a string.
 	 * @see to_s
-	 * @return string
 	 */
 	final public function __toString(): string
 	{
@@ -247,8 +245,6 @@ abstract class Serialization implements \Stringable
 
 /**
  * Array serializer.
- *
- * @package ActiveRecord
  */
 class ArraySerializer extends Serialization
 {
@@ -256,14 +252,14 @@ class ArraySerializer extends Serialization
 
 	public function to_s()
 	{
-		return self::$include_root ? [strtolower($this->model::class) => $this->to_a()] : $this->to_a();
+		return self::$include_root ? [
+		    strtolower($this->model::class) => $this->to_a(),
+		] : $this->to_a();
 	}
 }
 
 /**
  * JSON serializer.
- *
- * @package ActiveRecord
  */
 class JsonSerializer extends ArraySerializer
 {
@@ -278,17 +274,18 @@ class JsonSerializer extends ArraySerializer
 
 /**
  * XML serializer.
- *
- * @package ActiveRecord
  */
 class XmlSerializer extends Serialization
 {
 	private $writer;
 
-	public function __construct(Model $model, &$options)
+	public function __construct(
+	    Model $model,
+	    &$options
+	)
 	{
 		$this->includes_with_class_name_element = true;
-		parent::__construct($model,$options);
+		parent::__construct($model, $options);
 	}
 
 	public function to_s()
@@ -308,12 +305,12 @@ class XmlSerializer extends Serialization
 		$xml = $this->writer->outputMemory(true);
 
 		if (@$this->options['skip_instruct'] == true)
-			$xml = preg_replace('/<\?xml version.*?\?>/','',$xml);
+			$xml = preg_replace('/<\?xml version.*?\?>/', '', $xml);
 
 		return $xml;
 	}
 
-	private function write($data, $tag=null)
+	private function write($data, $tag = null)
 	{
 		foreach ($data as $attr => $value)
 		{
@@ -322,14 +319,13 @@ class XmlSerializer extends Serialization
 
 			if (is_array($value) || is_object($value))
 			{
-				if (!is_int(key($value)))
+				if (! is_int(key($value)))
 				{
 					$this->writer->startElement($attr);
 					$this->write($value);
 					$this->writer->endElement();
 				}
-				else
-					$this->write($value, $attr);
+				else $this->write($value, $attr);
 
 				continue;
 			}
@@ -341,12 +337,11 @@ class XmlSerializer extends Serialization
 
 /**
  * CSV serializer.
- *
- * @package ActiveRecord
  */
 class CsvSerializer extends Serialization
 {
   public static $delimiter = ',';
+
   public static $enclosure = '"';
 
   public function to_s()

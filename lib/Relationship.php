@@ -1,25 +1,22 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 
 /**
  * Interface for a table relationship.
- *
- * @package ActiveRecord
  */
 interface InterfaceRelationship
 {
-	public function __construct($options=[]);
-	public function build_association(Model $model, $attributes=[], $guard_attributes=true);
-	public function create_association(Model $model, $attributes=[], $guard_attributes=true);
+	public function __construct($options = []);
+
+	public function build_association(Model $model, $attributes = [], $guard_attributes = true);
+
+	public function create_association(Model $model, $attributes = [], $guard_attributes = true);
 }
 
 /**
  * Abstract class that all relationships must extend from.
  *
- * @package ActiveRecord
  * @see http://www.phpactiverecord.org/guides/associations
  */
 abstract class AbstractRelationship implements InterfaceRelationship
@@ -55,7 +52,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	/**
 	 * Is the relationship single or multi.
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $poly_relationship = false;
 
@@ -72,7 +69,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	 * @param array $options Options for the relationship (see {@link valid_association_options})
 	 * @return mixed
 	 */
-	public function __construct($options=[])
+	public function __construct($options = [])
 	{
 		$this->attribute_name = $options[0];
 		$this->options = $this->merge_association_options($options);
@@ -82,7 +79,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 		if ($relationship === 'hasmany' || $relationship === 'hasandbelongstomany')
 			$this->poly_relationship = true;
 
-		if (isset($this->options['conditions']) && !is_array($this->options['conditions']))
+		if (isset($this->options['conditions']) && ! is_array($this->options['conditions']))
 			$this->options['conditions'] = [$this->options['conditions']];
 
 		if (isset($this->options['class']))
@@ -92,7 +89,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 
 		$this->attribute_name = strtolower(Inflector::instance()->variablize($this->attribute_name));
 
-		if (!$this->foreign_key && isset($this->options['foreign_key']))
+		if (! $this->foreign_key && isset($this->options['foreign_key']))
 			$this->foreign_key = is_array($this->options['foreign_key']) ? $this->options['foreign_key'] : [$this->options['foreign_key']];
 	}
 
@@ -118,15 +115,13 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	 * the related table by PK/FK and attaches the array of returned relationships to the appropriately named relationship on
 	 * $models.
 	 *
-	 * @param Table $table
-	 * @param $models array of model objects
-	 * @param $attributes array of attributes from $models
-	 * @param $includes array of eager load directives
+	 * @param array $models of model objects
+	 * @param array $attributes of attributes from $models
+	 * @param array $includes of eager load directives
 	 * @param $query_keys -> key(s) to be queried for on included/related table
 	 * @param $model_values_keys -> key(s)/value(s) to be used in query from model which is including
-	 * @return void
 	 */
-	protected function query_and_attach_related_models_eagerly(Table $table, $models, $attributes, $includes=[], $query_keys=[], $model_values_keys=[])
+	protected function query_and_attach_related_models_eagerly(Table $table, $models, $attributes, $includes = [], $query_keys = [], $model_values_keys = [])
 	{
 		$values = [];
 		$options = $this->options;
@@ -138,23 +133,22 @@ abstract class AbstractRelationship implements InterfaceRelationship
 			$values[] = $value[$inflector->variablize($model_values_key)];
 
 		$values = [$values];
-		$conditions = SQLBuilder::create_conditions_from_underscored_string($table->conn,$query_key,$values);
+		$conditions = SQLBuilder::create_conditions_from_underscored_string($table->conn, $query_key, $values);
 
 		if (isset($options['conditions']) && strlen($options['conditions'][0]) > 1)
 			Utils::add_condition($options['conditions'], $conditions);
-		else
-			$options['conditions'] = $conditions;
+		else $options['conditions'] = $conditions;
 
-		if (!empty($includes))
+		if (! empty($includes))
 			$options['include'] = $includes;
 
-		if (!empty($options['through'])) {
+		if (! empty($options['through'])) {
 			// save old keys as we will be reseting them below for inner join convenience
 			$pk = $this->primary_key;
 			$fk = $this->foreign_key;
 
 			$this->set_keys($this->get_table()->class->getName(), true);
-			if($through_table = $this->through_table()) {
+			if ($through_table = $this->through_table()) {
 				$options['joins'] = $this->construct_inner_join_sql($through_table, true);
 			}
 
@@ -186,9 +180,8 @@ abstract class AbstractRelationship implements InterfaceRelationship
 					$hash = spl_object_hash($related);
 
 					if (in_array($hash, $used_models))
-						$model->set_relationship_from_eager_load(clone($related), $this->attribute_name);
-					else
-						$model->set_relationship_from_eager_load($related, $this->attribute_name);
+						$model->set_relationship_from_eager_load(clone ($related), $this->attribute_name);
+					else $model->set_relationship_from_eager_load($related, $this->attribute_name);
 
 					$used_models[] = $hash;
 					$matches++;
@@ -207,7 +200,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	 * @param array $attributes Hash containing attributes to initialize the model with
 	 * @return Model
 	 */
-	public function build_association(Model $model, $attributes=[], $guard_attributes=true)
+	public function build_association(Model $model, $attributes = [], $guard_attributes = true)
 	{
 		$class_name = $this->class_name;
 		return new $class_name($attributes, $guard_attributes);
@@ -220,7 +213,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	 * @param array $attributes Hash containing attributes to initialize the model with
 	 * @return Model
 	 */
-	public function create_association(Model $model, $attributes=[], $guard_attributes=true)
+	public function create_association(Model $model, $attributes = [], $guard_attributes = true)
 	{
 		$class_name = $this->class_name;
 		$new_record = $class_name::create($attributes, true, $guard_attributes);
@@ -229,20 +222,19 @@ abstract class AbstractRelationship implements InterfaceRelationship
 
 	protected function append_record_to_associate(Model $associate, Model $record)
 	{
-		$association =& $associate->{$this->attribute_name};
+		$association = & $associate->{$this->attribute_name};
 
 		if ($this->poly_relationship)
 			$association[] = $record;
-		else
-			$association = $record;
+		else $association = $record;
 
 		return $record;
 	}
 
 	protected function merge_association_options($options)
 	{
-		$available_options = array_merge(self::$valid_association_options,static::$valid_association_options);
-		$valid_options = array_intersect_key(array_flip($available_options),$options);
+		$available_options = array_merge(self::$valid_association_options, static::$valid_association_options);
+		$valid_options = array_intersect_key(array_flip($available_options), $options);
 
 		foreach ($valid_options as $option => $v)
 			$valid_options[$option] = $options[$option];
@@ -254,7 +246,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	{
 		foreach (array_keys($options) as $option)
 		{
-			if (!in_array($option, Model::$VALID_OPTIONS))
+			if (! in_array($option, Model::$VALID_OPTIONS))
 				unset($options[$option]);
 		}
 		return $options;
@@ -265,7 +257,6 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	 *
 	 * Will try to guess the appropriate class by singularizing and uppercasing $this->attribute_name.
 	 *
-	 * @return void
 	 * @see attribute_name
 	 */
 	protected function set_inferred_class_name()
@@ -276,34 +267,33 @@ abstract class AbstractRelationship implements InterfaceRelationship
 
 	protected function set_class_name($class_name)
 	{
-		if (!has_absolute_namespace($class_name) && isset($this->options['namespace'])) {
-			$class_name = $this->options['namespace'].'\\'.$class_name;
+		if (! has_absolute_namespace($class_name) && isset($this->options['namespace'])) {
+			$class_name = $this->options['namespace'] . '\\' . $class_name;
 		}
 
 		$reflection = Reflections::instance()->add($class_name)->get($class_name);
 
-		if (!$reflection->isSubClassOf(\ActiveRecord\Model::class))
+		if (! $reflection->isSubClassOf(\ActiveRecord\Model::class))
 			throw new RelationshipException("'$class_name' must extend from ActiveRecord\\Model");
 
 		$this->class_name = $class_name;
 	}
 
-	protected function create_conditions_from_keys(Model $model, $condition_keys=[], $value_keys=[])
+	protected function create_conditions_from_keys(Model $model, $condition_keys = [], $value_keys = [])
 	{
 		$condition_string = implode('_and_', $condition_keys ?? []);
 		$condition_values = array_values($model->get_values_for($value_keys));
 
 		// return null if all the foreign key values are null so that we don't try to do a query like "id is null"
-		if (all(null,$condition_values))
+		if (all(null, $condition_values))
 			return null;
 
-		$conditions = SQLBuilder::create_conditions_from_underscored_string(Table::load($model::class)->conn,$condition_string,$condition_values);
+		$conditions = SQLBuilder::create_conditions_from_underscored_string(Table::load($model::class)->conn, $condition_string, $condition_values);
 
 		# DO NOT CHANGE THE NEXT TWO LINES. add_condition operates on a reference and will screw options array up
 		if (isset($this->options['conditions']))
 			$options_conditions = $this->options['conditions'];
-		else
-			$options_conditions = [];
+		else $options_conditions = [];
 
 		return Utils::add_condition($options_conditions, $conditions);
 	}
@@ -316,7 +306,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	 * @param string $alias a table alias for when a table is being joined twice
 	 * @return string SQL INNER JOIN fragment
 	 */
-	public function construct_inner_join_sql(Table $from_table, $using_through=false, $alias=null)
+	public function construct_inner_join_sql(Table $from_table, $using_through = false, $alias = null)
 	{
 		if ($using_through)
 		{
@@ -324,8 +314,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 			$join_table_name = $from_table->get_fully_qualified_table_name();
 			$from_table_name = Table::load($this->class_name)->get_fully_qualified_table_name();
  		}
-		else
-		{
+		else {
 			$join_table = Table::load($this->class_name);
 			$join_table_name = $join_table->get_fully_qualified_table_name();
 			$from_table_name = $from_table->get_fully_qualified_table_name();
@@ -341,39 +330,35 @@ abstract class AbstractRelationship implements InterfaceRelationship
 				$foreign_key = $this->primary_key[0];
 				$join_primary_key = $this->foreign_key[0];
 			}
-			else
-			{
+			else {
 				$join_primary_key = $this->foreign_key[0];
 				$foreign_key = $this->primary_key[0];
 			}
 		}
-		else
-		{
+		else {
 			$foreign_key = $this->foreign_key[0];
 			$join_primary_key = $this->primary_key[0];
 		}
 
-		if (!is_null($alias))
+		if (! is_null($alias))
 		{
 			$aliased_join_table_name = $alias = $this->get_table()->conn->quote_name($alias);
 			$alias .= ' ';
 		}
-		else
-			$aliased_join_table_name = $join_table_name;
+		else $aliased_join_table_name = $join_table_name;
 
 		$on_clause = "$from_table_name.$foreign_key = $aliased_join_table_name.$join_primary_key";
 
-		#append association conditions if they exist
-		if(array_key_exists('conditions',$this->options) && $conditions = $this->options['conditions']) {
-			if(count($conditions) == 1 && is_string($conditions[0])) {
+		# append association conditions if they exist
+		if (array_key_exists('conditions', $this->options) && $conditions = $this->options['conditions']) {
+			if (count($conditions) == 1 && is_string($conditions[0])) {
 				$on_clause = "($on_clause) AND ($conditions[0])";
 			}
-			#TODO: handle conditions as arrays
+			# TODO: handle conditions as arrays
 		}
 
 		return " INNER JOIN $join_table_name {$alias}ON($on_clause)";
 	}
-
 
 	/**
 	 * This will load the related model data.
@@ -387,7 +372,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
 	 */
 	public function is_through()
 	{
-		return array_key_exists('through', $this->options) && !empty($this->options['through']);
+		return array_key_exists('through', $this->options) && ! empty($this->options['through']);
 	}
 
 	/**
@@ -398,9 +383,9 @@ abstract class AbstractRelationship implements InterfaceRelationship
 		$options = $this->options;
 		if (empty($options['through'])) { return null; }
 
-		if (!isset($options['class_name'])) {
+		if (! isset($options['class_name'])) {
 			$class = classify($options['through'], true);
-			if (isset($options['namespace']) && !class_exists($class)) {
+			if (isset($options['namespace']) && ! class_exists($class)) {
 				$class = $options['namespace'] . '\\' . $class;
 			}
 			$through_table = $class::table();
@@ -460,7 +445,6 @@ abstract class AbstractRelationship implements InterfaceRelationship
  * }
  * </code>
  *
- * @package ActiveRecord
  * @see http://www.phpactiverecord.org/guides/associations
  * @see valid_association_options
  */
@@ -484,6 +468,7 @@ class HasMany extends AbstractRelationship
 	protected $primary_key;
 
 	private $has_one = false;
+
 	private $through;
 
 	/**
@@ -492,7 +477,7 @@ class HasMany extends AbstractRelationship
 	 * @param array $options Options for the association
 	 * @return HasMany
 	 */
-	public function __construct($options=[])
+	public function __construct($options = [])
 	{
 		parent::__construct($options);
 
@@ -504,20 +489,20 @@ class HasMany extends AbstractRelationship
 				$this->set_class_name($this->options['source']);
 		}
 
-		if (!$this->primary_key && isset($this->options['primary_key']))
+		if (! $this->primary_key && isset($this->options['primary_key']))
 			$this->primary_key = is_array($this->options['primary_key']) ? $this->options['primary_key'] : [$this->options['primary_key']];
 
-		if (!$this->class_name)
+		if (! $this->class_name)
 			$this->set_inferred_class_name();
 	}
 
-	protected function set_keys($model_class_name, $override=false)
+	protected function set_keys($model_class_name, $override = false)
 	{
-		//infer from class_name
-		if (!$this->foreign_key || $override)
+		// infer from class_name
+		if (! $this->foreign_key || $override)
 			$this->foreign_key = [Inflector::instance()->keyify($model_class_name)];
 
-		if (!$this->primary_key || $override)
+		if (! $this->primary_key || $override)
 			$this->primary_key = Table::load($model_class_name)->pk;
 	}
 
@@ -529,15 +514,15 @@ class HasMany extends AbstractRelationship
 		// since through relationships depend on other relationships we can't do
 		// this initiailization in the constructor since the other relationship
 		// may not have been created yet and we only want this to run once
-		if (!isset($this->initialized))
+		if (! isset($this->initialized))
 		{
 			if ($this->through)
 			{
 				// verify through is a belongs_to or has_many for access of keys
-				if (!($through_relationship = $this->get_table()->get_relationship($this->through)))
+				if (! ($through_relationship = $this->get_table()->get_relationship($this->through)))
 					throw new HasManyThroughAssociationException("Could not find the association $this->through in model " . $model::class);
 
-				if (!($through_relationship instanceof HasMany) && !($through_relationship instanceof BelongsTo))
+				if (! ($through_relationship instanceof HasMany) && ! ($through_relationship instanceof BelongsTo))
 					throw new HasManyThroughAssociationException('has_many through can only use a belongs_to or has_many association');
 
 				// save old keys as we will be reseting them below for inner join convenience
@@ -559,19 +544,17 @@ class HasMany extends AbstractRelationship
 			$this->initialized = true;
 		}
 
-		if (!($conditions = $this->create_conditions_from_keys($model, $this->foreign_key, $this->primary_key)))
+		if (! ($conditions = $this->create_conditions_from_keys($model, $this->foreign_key, $this->primary_key)))
 			return null;
 
 		$options = $this->unset_non_finder_options($this->options);
 		$options['conditions'] = $conditions;
-		return $class_name::find($this->poly_relationship ? 'all' : 'first',$options);
+		return $class_name::find($this->poly_relationship ? 'all' : 'first', $options);
 	}
 
 	/**
 	 * Get an array containing the key and value of the foreign key for the association
 	 *
-	 * @param Model $model
-	 * @access private
 	 * @return array
 	 */
 	private function get_foreign_key_for_new_association(Model $model)
@@ -580,7 +563,7 @@ class HasMany extends AbstractRelationship
 		$primary_key = Inflector::instance()->variablize($this->foreign_key[0]);
 
 		return [
-			$primary_key => $model->id,
+		    $primary_key => $model->id,
 		];
 	}
 
@@ -593,7 +576,7 @@ class HasMany extends AbstractRelationship
 		return $attributes;
 	}
 
-	public function build_association(Model $model, $attributes=[], $guard_attributes=true)
+	public function build_association(Model $model, $attributes = [], $guard_attributes = true)
 	{
 		$relationship_attributes = $this->get_foreign_key_for_new_association($model);
 
@@ -614,7 +597,7 @@ class HasMany extends AbstractRelationship
 		return $record;
 	}
 
-	public function create_association(Model $model, $attributes=[], $guard_attributes=true)
+	public function create_association(Model $model, $attributes = [], $guard_attributes = true)
 	{
 		$relationship_attributes = $this->get_foreign_key_for_new_association($model);
 
@@ -638,10 +621,10 @@ class HasMany extends AbstractRelationship
 		return $record;
 	}
 
-	public function load_eagerly($models=[], $attributes=[], $includes=null, ?Table $table=null)
+	public function load_eagerly($models = [], $attributes = [], $includes = null, ?Table $table = null)
 	{
 		$this->set_keys($table->class->name);
-		$this->query_and_attach_related_models_eagerly($table,$models,$attributes,$includes,$this->foreign_key, $table->pk);
+		$this->query_and_attach_related_models_eagerly($table, $models, $attributes, $includes, $this->foreign_key, $table->pk);
 	}
 }
 
@@ -660,7 +643,6 @@ class HasMany extends AbstractRelationship
  * }
  * </code>
  *
- * @package ActiveRecord
  * @see http://www.phpactiverecord.org/guides/associations
  */
 class HasOne extends HasMany
@@ -669,12 +651,11 @@ class HasOne extends HasMany
 
 /**
  * @todo implement me
- * @package ActiveRecord
  * @see http://www.phpactiverecord.org/guides/associations
  */
 class HasAndBelongsToMany extends AbstractRelationship
 {
-	public function __construct($options=[])
+	public function __construct($options = [])
 	{
 		/* options =>
 		 *   join_table - name of the join table if not in lexical order
@@ -716,35 +697,33 @@ class HasAndBelongsToMany extends AbstractRelationship
  * }
  * </code>
  *
- * @package ActiveRecord
  * @see valid_association_options
  * @see http://www.phpactiverecord.org/guides/associations
  */
 class BelongsTo extends AbstractRelationship
 {
-
 	protected static $valid_association_options = ['primary_key'];
 
     protected $primary_key;
 
-	public function __construct($options=[])
+	public function __construct($options = [])
 	{
 		parent::__construct($options);
 
-		if (!$this->class_name)
+		if (! $this->class_name)
 			$this->set_inferred_class_name();
 
-		//infer from class_name
-		if (!$this->foreign_key)
+		// infer from class_name
+		if (! $this->foreign_key)
 			$this->foreign_key = [Inflector::instance()->keyify($this->class_name)];
 
-		if (!isset($this->primary_key) && isset($this->options['primary_key']))
+		if (! isset($this->primary_key) && isset($this->options['primary_key']))
 			$this->primary_key = is_array($this->options['primary_key']) ? $this->options['primary_key'] : [$this->options['primary_key']];
 	}
 
 	public function __get($name)
 	{
-		if($name === 'primary_key' && !isset($this->primary_key)) {
+		if ($name === 'primary_key' && ! isset($this->primary_key)) {
 			$this->primary_key = [Table::load($this->class_name)->pk[0]];
 		}
 
@@ -759,7 +738,7 @@ class BelongsTo extends AbstractRelationship
 		foreach ($this->foreign_key as $key)
 			$keys[] = $inflector->variablize($key);
 
-		if (!($conditions = $this->create_conditions_from_keys($model, $this->primary_key, $keys)))
+		if (! ($conditions = $this->create_conditions_from_keys($model, $this->primary_key, $keys)))
 			return null;
 
 		$options = $this->unset_non_finder_options($this->options);
@@ -768,8 +747,8 @@ class BelongsTo extends AbstractRelationship
 		return $class::first($options);
 	}
 
-	public function load_eagerly($models=[], $attributes=null, $includes=null, ?Table $table=null)
+	public function load_eagerly($models = [], $attributes = null, $includes = null, ?Table $table = null)
 	{
-		$this->query_and_attach_related_models_eagerly($table,$models,$attributes,$includes, $this->primary_key,$this->foreign_key);
+		$this->query_and_attach_related_models_eagerly($table, $models, $attributes, $includes, $this->primary_key, $this->foreign_key);
 	}
 }

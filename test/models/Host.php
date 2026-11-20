@@ -1,9 +1,13 @@
 <?php
+
 class Host extends ActiveRecord\Model
 {
 	static $has_many = [
-		'events',
-		['venues', 'through' => 'events']
+	    'events',
+	    [
+	        'venues',
+	        'through' => 'events',
+	    ],
 	];
 }
 ?>

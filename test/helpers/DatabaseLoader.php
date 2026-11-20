@@ -1,9 +1,12 @@
 <?php
+
 class DatabaseLoader
 {
 	static $instances = [];
 
-	public function __construct(private $db)
+	public function __construct(
+	    private $db
+	)
 	{
 		static::$instances[$this->db->protocol] ??= 0;
         if (static::$instances[$this->db->protocol]++ == 0)
@@ -25,7 +28,7 @@ class DatabaseLoader
 			$this->load_fixture_data($table);
 		}
 
-		$after_fixtures = $this->db->protocol.'-after-fixtures';
+		$after_fixtures = $this->db->protocol . '-after-fixtures';
 		try {
 			$this->exec_sql_script($after_fixtures);
 		} catch (Exception) {
@@ -47,7 +50,7 @@ class DatabaseLoader
 					continue;
 			}
 
-			if (in_array($table,$tables))
+			if (in_array($table, $tables))
 				$this->db->query('DROP TABLE ' . $this->quote_name($table));
 
 			if ($this->db->protocol == 'oci')
@@ -63,7 +66,7 @@ class DatabaseLoader
 
 	public function exec_sql_script($file)
 	{
-		foreach (explode(';',$this->get_sql($file)) as $sql)
+		foreach (explode(';', $this->get_sql($file)) as $sql)
 		{
 			if (trim($sql) != '')
 				$this->db->query($sql);
@@ -87,7 +90,7 @@ class DatabaseLoader
 	{
 		$file = __DIR__ . "/../sql/$file.sql";
 
-		if (!file_exists($file))
+		if (! file_exists($file))
 			throw new Exception("File not found: $file");
 
 		return file_get_contents($file);
@@ -95,21 +98,21 @@ class DatabaseLoader
 
 	public function load_fixture_data($table)
 	{
-		$fp = fopen(__DIR__ . "/../fixtures/$table.csv",'r');
+		$fp = fopen(__DIR__ . "/../fixtures/$table.csv", 'r');
 		$fields = fgetcsv($fp, escape: '\\');
 
-		if (!empty($fields))
+		if (! empty($fields))
 		{
-			$markers = implode(',',array_fill(0,count($fields),'?'));
+			$markers = implode(',', array_fill(0, count($fields), '?'));
 			$table = $this->quote_name($table);
 
 			foreach ($fields as &$name)
 				$name = $this->quote_name(trim($name));
 
-			$fields = implode(',',$fields);
+			$fields = implode(',', $fields);
 
 			while (($values = fgetcsv($fp, escape: '\\')))
-				$this->db->query("INSERT INTO $table($fields) VALUES($markers)",$values);
+				$this->db->query("INSERT INTO $table($fields) VALUES($markers)", $values);
 		}
 		fclose($fp);
 	}

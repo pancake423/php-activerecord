@@ -1,9 +1,10 @@
 <?php
+
 require_once __DIR__ . '/../lib/adapters/SqliteAdapter.php';
 
 class SqliteAdapterTest extends AdapterTestCase
 {
-	public function set_up($connection_name=null)
+	public function set_up($connection_name = null)
 	{
 		parent::set_up('sqlite');
 	}
@@ -15,7 +16,6 @@ class SqliteAdapterTest extends AdapterTestCase
 		@unlink(self::InvalidDb);
 	}
 
-
 	public static function tearDownAfterClass(): void
 	{
 		parent::tearDownAfterClass();
@@ -25,8 +25,7 @@ class SqliteAdapterTest extends AdapterTestCase
 
 	public function testConnectToInvalidDatabaseShouldNotCreateDbFile()
 	{
-		try
-		{
+		try {
 			ActiveRecord\Connection::instance("sqlite://" . self::InvalidDb);
 			$this->assertFalse(true);
 		}
@@ -40,7 +39,7 @@ class SqliteAdapterTest extends AdapterTestCase
 	{
 		$ret = [];
 		$sql = 'SELECT * FROM authors ORDER BY name ASC';
-		$this->conn->query_and_fetch($this->conn->limit($sql,null,1),function($row) use (&$ret): void { $ret[] = $row; });
+		$this->conn->query_and_fetch($this->conn->limit($sql, null, 1), function ($row) use (&$ret): void { $ret[] = $row; });
 
 		$this->assert_true(str_contains($this->conn->last_query, 'LIMIT 1'));
 	}
@@ -67,13 +66,13 @@ class SqliteAdapterTest extends AdapterTestCase
 	public function test_datetime_to_string()
 	{
 		$datetime = '2009-01-01 01:01:01';
-		$this->assert_equals($datetime,$this->conn->datetime_to_string(date_create($datetime)));
+		$this->assert_equals($datetime, $this->conn->datetime_to_string(date_create($datetime)));
 	}
 
 	public function test_date_to_string()
 	{
 		$datetime = '2009-01-01';
-		$this->assert_equals($datetime,$this->conn->date_to_string(date_create($datetime)));
+		$this->assert_equals($datetime, $this->conn->date_to_string(date_create($datetime)));
 	}
 
 	// not supported

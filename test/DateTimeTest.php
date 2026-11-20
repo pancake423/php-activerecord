@@ -1,6 +1,7 @@
 <?php
-use ActiveRecord\DateTime as DateTime;
+
 use ActiveRecord\DatabaseException;
+use ActiveRecord\DateTime;
 
 class DateTimeTest extends SnakeCase_PHPUnit_Framework_TestCase
 {
@@ -15,51 +16,51 @@ class DateTimeTest extends SnakeCase_PHPUnit_Framework_TestCase
 		DateTime::$DEFAULT_FORMAT = $this->original_format;
 	}
 
-	private function assert_dirtifies($method /*, method params, ...*/)
+	private function assert_dirtifies($method /* , method params, ... */)
 	{
 		try {
 			$model = new Author();
 		} catch (DatabaseException $e) {
-			$this->mark_test_skipped('failed to connect. '.$e->getMessage());
+			$this->mark_test_skipped('failed to connect. ' . $e->getMessage());
 		}
 		$datetime = new DateTime();
-		$datetime->attribute_of($model,'some_date');
+		$datetime->attribute_of($model, 'some_date');
 
 		$args = func_get_args();
 		array_shift($args);
 
-		call_user_func_array([$datetime,$method],$args);
+		call_user_func_array([$datetime, $method], $args);
 		$this->assert_has_keys('some_date', $model->dirty_attributes());
 	}
 
 	public function test_should_flag_the_attribute_dirty()
 	{
-		$this->assert_dirtifies('setDate',2001,1,1);
-		$this->assert_dirtifies('setISODate',2001,1);
-		$this->assert_dirtifies('setTime',1,1);
-		$this->assert_dirtifies('setTimestamp',1);
+		$this->assert_dirtifies('setDate', 2001, 1, 1);
+		$this->assert_dirtifies('setISODate', 2001, 1);
+		$this->assert_dirtifies('setTime', 1, 1);
+		$this->assert_dirtifies('setTimestamp', 1);
 	}
 
 	public function test_set_iso_date()
 	{
 		$a = new \DateTime();
-		$a->setISODate(2001,1);
+		$a->setISODate(2001, 1);
 
 		$b = new DateTime();
-		$b->setISODate(2001,1);
+		$b->setISODate(2001, 1);
 
-		$this->assert_datetime_equals($a,$b);
+		$this->assert_datetime_equals($a, $b);
 	}
 
 	public function test_set_time()
 	{
 		$a = new \DateTime();
-		$a->setTime(1,1);
+		$a->setTime(1, 1);
 
 		$b = new DateTime();
-		$b->setTime(1,1);
+		$b->setTime(1, 1);
 
-		$this->assert_datetime_equals($a,$b);
+		$this->assert_datetime_equals($a, $b);
 	}
 
 	public function test_get_format_with_friendly()

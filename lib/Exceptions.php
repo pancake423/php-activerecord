@@ -1,20 +1,14 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 
 /**
  * Generic base exception for all ActiveRecord specific errors.
- *
- * @package ActiveRecord
  */
 class ActiveRecordException extends \Exception {}
 
 /**
  * Thrown when a record cannot be found.
- *
- * @package ActiveRecord
  */
 class RecordNotFound extends ActiveRecordException {}
 
@@ -22,8 +16,6 @@ class RecordNotFound extends ActiveRecordException {}
  * Thrown when there was an error performing a database operation.
  *
  * The error will be specific to whatever database you are running.
- *
- * @package ActiveRecord
  */
 class DatabaseException extends ActiveRecordException
 {
@@ -32,68 +24,60 @@ class DatabaseException extends ActiveRecordException
 		if ($adapter_or_string_or_mystery instanceof Connection)
 		{
 			parent::__construct(
-				implode(", ",$adapter_or_string_or_mystery->connection->errorInfo()),
-				intval($adapter_or_string_or_mystery->connection->errorCode()));
+			    implode(", ", $adapter_or_string_or_mystery->connection->errorInfo()),
+			    intval($adapter_or_string_or_mystery->connection->errorCode())
+			);
 		}
 		elseif ($adapter_or_string_or_mystery instanceof \PDOStatement)
 		{
 			parent::__construct(
-				implode(", ",$adapter_or_string_or_mystery->errorInfo()),
-				intval($adapter_or_string_or_mystery->errorCode()));
+			    implode(", ", $adapter_or_string_or_mystery->errorInfo()),
+			    intval($adapter_or_string_or_mystery->errorCode())
+			);
 		}
 		elseif ($adapter_or_string_or_mystery instanceof \PDOException)
 		{
 			if ($adapter_or_string_or_mystery->errorInfo)
 			{
-				$message = implode(", ",$adapter_or_string_or_mystery->errorInfo);
+				$message = implode(", ", $adapter_or_string_or_mystery->errorInfo);
 			}
-			else
-			{
+			else {
 				$message = $adapter_or_string_or_mystery->getMessage();
 			}
 			parent::__construct(
-				$message,
-				intval($adapter_or_string_or_mystery->getCode()),
-				$adapter_or_string_or_mystery);
+			    $message,
+			    intval($adapter_or_string_or_mystery->getCode()),
+			    $adapter_or_string_or_mystery
+			);
 		}
-		else
-			parent::__construct($adapter_or_string_or_mystery);
+		else parent::__construct($adapter_or_string_or_mystery);
 	}
 }
 
 /**
  * Thrown by {@link Model}.
- *
- * @package ActiveRecord
  */
 class ModelException extends ActiveRecordException {}
 
 /**
  * Thrown by {@link Expressions}.
- *
- * @package ActiveRecord
  */
 class ExpressionsException extends ActiveRecordException {}
 
 /**
  * Thrown for configuration problems.
- *
- * @package ActiveRecord
  */
 class ConfigException extends ActiveRecordException {}
 
 /**
  * Thrown when attempting to access an invalid property on a {@link Model}.
- *
- * @package ActiveRecord
  */
 class UndefinedPropertyException extends ModelException
 {
 	/**
 	 * Sets the exception message to show the undefined property's name.
 	 *
-	 * @param str $property_name name of undefined property
-	 * @return void
+	 * @param string $property_name name of undefined property
 	 */
 	public function __construct($class_name, $property_name)
 	{
@@ -110,17 +94,14 @@ class UndefinedPropertyException extends ModelException
 
 /**
  * Thrown when attempting to perform a write operation on a {@link Model} that is in read-only mode.
- *
- * @package ActiveRecord
  */
 class ReadOnlyException extends ModelException
 {
 	/**
 	 * Sets the exception message to show the undefined property's name.
 	 *
-	 * @param str $class_name name of the model that is read only
-	 * @param str $method_name name of method which attempted to modify the model
-	 * @return void
+	 * @param string $class_name name of the model that is read only
+	 * @param string $method_name name of method which attempted to modify the model
 	 */
 	public function __construct($class_name, $method_name)
 	{
@@ -131,21 +112,15 @@ class ReadOnlyException extends ModelException
 
 /**
  * Thrown for validations exceptions.
- *
- * @package ActiveRecord
  */
 class ValidationsArgumentError extends ActiveRecordException {}
 
 /**
  * Thrown for relationship exceptions.
- *
- * @package ActiveRecord
  */
 class RelationshipException extends ActiveRecordException {}
 
 /**
  * Thrown for has many thru exceptions.
- *
- * @package ActiveRecord
  */
 class HasManyThroughAssociationException extends RelationshipException {}

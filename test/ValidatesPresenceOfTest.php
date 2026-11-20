@@ -5,7 +5,7 @@ class BookPresence extends ActiveRecord\Model
 	static $table_name = 'books';
 
 	static $validates_presence_of = [
-		['name']
+	    ['name'],
 	];
 }
 
@@ -14,7 +14,7 @@ class AuthorPresence extends ActiveRecord\Model
 	static $table_name = 'authors';
 
 	static $validates_presence_of = [
-		['some_date']
+	    ['some_date'],
 	];
 };
 
@@ -22,13 +22,17 @@ class ValidatesPresenceOfTest extends DatabaseTestCase
 {
 	public function test_presence()
 	{
-		$book = new BookPresence(['name' => 'blah']);
+		$book = new BookPresence([
+		    'name' => 'blah',
+		]);
 		$this->assert_false($book->is_invalid());
 	}
 
 	public function test_presence_on_date_field_is_valid()
 	{
-		$author = new AuthorPresence(['some_date' => '2010-01-01']);
+		$author = new AuthorPresence([
+		    'some_date' => '2010-01-01',
+		]);
 		$this->assert_true($author->is_valid());
 	}
 
@@ -40,19 +44,25 @@ class ValidatesPresenceOfTest extends DatabaseTestCase
 
 	public function test_invalid_null()
 	{
-		$book = new BookPresence(['name' => null]);
+		$book = new BookPresence([
+		    'name' => null,
+		]);
 		$this->assert_true($book->is_invalid());
 	}
 
 	public function test_invalid_blank()
 	{
-		$book = new BookPresence(['name' => '']);
+		$book = new BookPresence([
+		    'name' => '',
+		]);
 		$this->assert_true($book->is_invalid());
 	}
 
 	public function test_valid_white_space()
 	{
-		$book = new BookPresence(['name' => ' ']);
+		$book = new BookPresence([
+		    'name' => ' ',
+		]);
 		$this->assert_false($book->is_invalid());
 	}
 
@@ -60,14 +70,18 @@ class ValidatesPresenceOfTest extends DatabaseTestCase
 	{
 		BookPresence::$validates_presence_of[0]['message'] = 'is using a custom message.';
 
-		$book = new BookPresence(['name' => null]);
+		$book = new BookPresence([
+		    'name' => null,
+		]);
 		$book->is_valid();
 		$this->assert_equals('is using a custom message.', $book->errors->on('name'));
 	}
 
 	public function test_valid_zero()
 	{
-		$book = new BookPresence(['name' => 0]);
+		$book = new BookPresence([
+		    'name' => 0,
+		]);
 		$this->assert_true($book->is_valid());
 	}
 };

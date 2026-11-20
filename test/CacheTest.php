@@ -1,16 +1,17 @@
 <?php
+
 use ActiveRecord\Cache;
 
 class CacheTest extends SnakeCase_PHPUnit_Framework_TestCase
 {
 	public function set_up()
 	{
-		if (!extension_loaded('memcache'))
+		if (! extension_loaded('memcache'))
 		{
 			$this->markTestSkipped('The memcache extension is not available');
 			return;
 		}
-		
+
 		Cache::initialize('memcache://localhost');
 	}
 
@@ -49,7 +50,7 @@ class CacheTest extends SnakeCase_PHPUnit_Framework_TestCase
 	public function test_get_does_not_execute_closure_on_cache_hit()
 	{
 		$this->cache_get();
-		Cache::get("1337", function(): void { throw new Exception("I better not execute!"); });
+		Cache::get("1337", function (): void { throw new Exception("I better not execute!"); });
 	}
 
 	public function test_cache_adapter_returns_false_on_cache_miss()
@@ -71,7 +72,7 @@ class CacheTest extends SnakeCase_PHPUnit_Framework_TestCase
 
 		$this->assert_same(false, Cache::$adapter->read("1337"));
 	}
-	
+
 	public function test_namespace_is_set_properly()
 	{
 	  Cache::$options['namespace'] = 'myapp';

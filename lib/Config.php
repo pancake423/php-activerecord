@@ -1,7 +1,5 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 use Closure;
 
@@ -16,8 +14,6 @@ use Closure;
  *     'production' => 'mysql://user:pass@production.com/awesome_production'));
  * });
  * </code>
- *
- * @package ActiveRecord
  */
 class Config extends Singleton
 {
@@ -117,7 +113,6 @@ class Config extends Singleton
      * </code>
      *
      * @param Closure $initializer A closure
-     * @return void
      */
     public static function initialize(Closure $initializer)
     {
@@ -134,12 +129,11 @@ class Config extends Singleton
      *
      * @param array $connections Array of connections
      * @param string $default_connection Optionally specify the default_connection
-     * @return void
      * @throws ActiveRecord\ConfigException
      */
     public function set_connections($connections, $default_connection = null)
     {
-        if (!is_array($connections)) {
+        if (! is_array($connections)) {
             throw new ConfigException("Connections must be an array");
         }
 
@@ -201,7 +195,6 @@ class Config extends Singleton
      * Set the name of the default connection.
      *
      * @param string $name Name of a connection in the connections array
-     * @return void
      */
     public function set_default_connection($name)
     {
@@ -212,7 +205,6 @@ class Config extends Singleton
      * Sets the directory where models are located.
      *
      * @param string $dir Directory path containing your models
-     * @return void
      */
     public function set_model_directory($dir)
     {
@@ -227,7 +219,7 @@ class Config extends Singleton
      */
     public function get_model_directory()
     {
-        if ($this->model_directory && !file_exists($this->model_directory)) {
+        if ($this->model_directory && ! file_exists($this->model_directory)) {
             throw new ConfigException(
                 "Invalid or non-existent directory: " . $this->model_directory,
             );
@@ -239,8 +231,7 @@ class Config extends Singleton
     /**
      * Turn on/off ensure_connection
      *
-     * @param boolean $bool
-     * @return void
+     * @param bool $bool
      */
     public function set_ensure_connection($bool)
     {
@@ -250,7 +241,7 @@ class Config extends Singleton
     /**
      * Return whether ensure_connection is enabled
      *
-     * @return boolean
+     * @return bool
      */
     public function get_ensure_connection()
     {
@@ -260,8 +251,7 @@ class Config extends Singleton
     /**
      * Turn on/off logging
      *
-     * @param boolean $bool
-     * @return void
+     * @param bool $bool
      */
     public function set_logging($bool)
     {
@@ -272,7 +262,6 @@ class Config extends Singleton
      * Sets the logger object for future SQL logging
      *
      * @param object $logger
-     * @return void
      * @throws ConfigException if Logger objecct does not implement public log()
      */
     public function set_logger($logger)
@@ -280,8 +269,8 @@ class Config extends Singleton
         $klass = Reflections::instance()->add($logger)->get($logger);
 
         if (
-            !$klass->getMethod("log") ||
-            !$klass->getMethod("log")->isPublic()
+            ! $klass->getMethod("log") ||
+            ! $klass->getMethod("log")->isPublic()
         ) {
             throw new ConfigException(
                 "Logger object must implement a public log method",
@@ -294,7 +283,7 @@ class Config extends Singleton
     /**
      * Return whether or not logging is on
      *
-     * @return boolean
+     * @return bool
      */
     public function get_logging()
     {
@@ -322,8 +311,8 @@ class Config extends Singleton
         }
 
         if (
-            !$klass->hasMethod("format") ||
-            !$klass->getMethod("format")->isPublic()
+            ! $klass->hasMethod("format") ||
+            ! $klass->getMethod("format")->isPublic()
         ) {
             throw new ConfigException(
                 'Given date class must have a "public format($format = null)" method',
@@ -331,8 +320,8 @@ class Config extends Singleton
         }
 
         if (
-            !$klass->hasMethod("createFromFormat") ||
-            !$klass->getMethod("createFromFormat")->isPublic()
+            ! $klass->hasMethod("createFromFormat") ||
+            ! $klass->getMethod("createFromFormat")->isPublic()
         ) {
             throw new ConfigException(
                 'Given date class must have a "public static createFromFormat($format, $time)" method',

@@ -1,19 +1,16 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 
 use PDO;
 
 /**
  * Adapter for OCI (not completed yet).
- * 
- * @package ActiveRecord
  */
 class OciAdapter extends Connection
 {
 	static $QUOTE_CHARACTER = '';
+
 	static $DEFAULT_PORT = 1521;
 
 	public $dsn_params;
@@ -22,14 +19,14 @@ class OciAdapter extends Connection
 	{
 		try {
 			$this->dsn_params = isset($info->charset) ? ";charset=$info->charset" : "";
-			$this->connection = new PDO("oci:dbname=//$info->host/$info->db$this->dsn_params",$info->user,$info->pass,static::$PDO_OPTIONS);
+			$this->connection = new PDO("oci:dbname=//$info->host/$info->db$this->dsn_params", $info->user, $info->pass, static::$PDO_OPTIONS);
 		} catch (PDOException $e) {
 			throw new DatabaseException($e);
 		}
 	}
 
 	public function supports_sequences() { return true; }
-	
+
 	public function get_next_sequence_value($sequence_name)
 	{
 		return $this->query_and_fetch_one('SELECT ' . $this->next_sequence_value($sequence_name) . ' FROM dual');
@@ -53,7 +50,7 @@ class OciAdapter extends Connection
 	// $string = DD-MON-YYYY HH12:MI:SS(\.[0-9]+) AM
 	public function string_to_datetime($string)
 	{
-		return parent::string_to_datetime(str_replace('.000000','',$string));
+		return parent::string_to_datetime(str_replace('.000000', '', $string));
 	}
 
 	public function limit($sql, $offset, $limit)
@@ -79,7 +76,7 @@ class OciAdapter extends Connection
 			"WHERE t.table_name=?";
 
 		$values = [strtoupper($table)];
-		return $this->query($sql,$values);
+		return $this->query($sql, $values);
 	}
 
 	public function query_for_tables()
@@ -90,10 +87,10 @@ class OciAdapter extends Connection
 	public function create_column(&$column)
 	{
 		$column['column_name'] = strtolower($column['column_name']);
-		$column['data_type'] = strtolower(preg_replace('/\(.*?\)/','',$column['data_type']));
+		$column['data_type'] = strtolower(preg_replace('/\(.*?\)/', '', $column['data_type']));
 
 		if ($column['data_default'] !== null)
-			$column['data_default'] = trim($column['data_default'],"' ");
+			$column['data_default'] = trim($column['data_default'], "' ");
 
 		if ($column['data_type'] == 'number')
 		{
@@ -104,19 +101,18 @@ class OciAdapter extends Connection
 		}
 
 		$c = new Column();
-		$c->inflected_name	= Inflector::instance()->variablize($column['column_name']);
-		$c->name			= $column['column_name'];
-		$c->nullable		= $column['nullable'] == 'Y' ? true : false;
-		$c->pk				= $column['pk'] == 'P' ? true : false;
-		$c->length			= $column['data_length'];
-	
+		$c->inflected_name = Inflector::instance()->variablize($column['column_name']);
+		$c->name = $column['column_name'];
+		$c->nullable = $column['nullable'] == 'Y' ? true : false;
+		$c->pk = $column['pk'] == 'P' ? true : false;
+		$c->length = $column['data_length'];
+
 		if ($column['data_type'] == 'timestamp')
 			$c->raw_type = 'datetime';
-		else
-			$c->raw_type = $column['data_type'];
+		else $c->raw_type = $column['data_type'];
 
 		$c->map_raw_type();
-		$c->default	= $c->cast($column['data_default'],$this);
+		$c->default = $c->cast($column['data_default'], $this);
 
 		return $c;
 	}
@@ -129,17 +125,40 @@ class OciAdapter extends Connection
 	public function native_database_types()
 	{
 		return [
-			'primary_key' => "NUMBER(38) NOT NULL PRIMARY KEY",
-			'string' => ['name' => 'VARCHAR2', 'length' => 255],
-			'text' => ['name' => 'CLOB'],
-			'integer' => ['name' => 'NUMBER', 'length' => 38],
-			'float' => ['name' => 'NUMBER'],
-			'datetime' => ['name' => 'DATE'],
-			'timestamp' => ['name' => 'DATE'],
-			'time' => ['name' => 'DATE'],
-			'date' => ['name' => 'DATE'],
-			'binary' => ['name' => 'BLOB'],
-			'boolean' => ['name' => 'NUMBER', 'length' => 1]
+		    'primary_key' => "NUMBER(38) NOT NULL PRIMARY KEY",
+		    'string' => [
+		        'name' => 'VARCHAR2',
+		        'length' => 255,
+		    ],
+		    'text' => [
+		        'name' => 'CLOB',
+		    ],
+		    'integer' => [
+		        'name' => 'NUMBER',
+		        'length' => 38,
+		    ],
+		    'float' => [
+		        'name' => 'NUMBER',
+		    ],
+		    'datetime' => [
+		        'name' => 'DATE',
+		    ],
+		    'timestamp' => [
+		        'name' => 'DATE',
+		    ],
+		    'time' => [
+		        'name' => 'DATE',
+		    ],
+		    'date' => [
+		        'name' => 'DATE',
+		    ],
+		    'binary' => [
+		        'name' => 'BLOB',
+		    ],
+		    'boolean' => [
+		        'name' => 'NUMBER',
+		        'length' => 1,
+		    ],
 		];
 	}
 }

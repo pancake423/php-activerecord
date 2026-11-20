@@ -1,7 +1,5 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 
 /**
@@ -30,7 +28,6 @@ namespace ActiveRecord;
  * echo $now->format('awesome_format')  # 03:04:05 01/02/2010
  * </code>
  *
- * @package ActiveRecord
  * @see http://php.net/manual/en/class.datetime.php
  */
 class DateTime extends \DateTime implements
@@ -65,6 +62,7 @@ class DateTime extends \DateTime implements
     ];
 
     private $model;
+
     private $attribute_name;
 
     public function attribute_of($model, $attribute_name)
@@ -105,7 +103,7 @@ class DateTime extends \DateTime implements
     public static function get_format($format = null)
     {
         // use default format if no format specified
-        if (!$format) {
+        if (! $format) {
             $format = self::$DEFAULT_FORMAT;
         }
 
@@ -134,7 +132,7 @@ class DateTime extends \DateTime implements
         $phpDate = $tz
             ? parent::createFromFormat($format, $time, $tz)
             : parent::createFromFormat($format, $time);
-        if (!$phpDate) {
+        if (! $phpDate) {
             return false;
         }
         // convert to this class using the timestamp

@@ -1,7 +1,5 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 
 /**
@@ -9,8 +7,6 @@ namespace ActiveRecord;
  * given by the "Gang of Four." The __construct() method has not be privatized so that
  * a singleton pattern is capable of being achieved; however, multiple instantiations are also
  * possible. This allows the user more freedom with this pattern.
- *
- * @package ActiveRecord
  */
 abstract class Singleton
 {
@@ -37,8 +33,6 @@ abstract class Singleton
 
 	/**
 	 * Singleton objects should not be cloned.
-	 *
-	 * @return void
 	 */
 	private function __clone() {}
 

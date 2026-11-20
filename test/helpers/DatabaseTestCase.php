@@ -1,14 +1,19 @@
 <?php
+
 require_once __DIR__ . "/DatabaseLoader.php";
 
 class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
 {
     protected $conn;
+
     public static $log = false;
+
     public static $db;
 
     protected $original_default_connection;
+
     protected $original_date_class;
+
     protected $connection_name;
 
     public function set_up($connection_name = null)

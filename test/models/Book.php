@@ -1,8 +1,11 @@
 <?php
+
 class Book extends ActiveRecord\Model
 {
 	static $belongs_to = ['author'];
+
 	static $has_one = [];
+
 	static $use_custom_get_name_getter = false;
 
 	public function upper_name()
@@ -19,8 +22,7 @@ class Book extends ActiveRecord\Model
 	{
 		if (self::$use_custom_get_name_getter)
 			return strtoupper($this->read_attribute('name'));
-		else
-			return $this->read_attribute('name');
+		else return $this->read_attribute('name');
 	}
 
 	public function get_upper_name()

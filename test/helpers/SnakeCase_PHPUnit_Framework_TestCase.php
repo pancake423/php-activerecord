@@ -1,4 +1,5 @@
 <?php
+
 class SnakeCase_PHPUnit_Framework_TestCase extends \PHPUnit\Framework\TestCase
 {
 	public function __call($meth, $args)
@@ -15,32 +16,32 @@ class SnakeCase_PHPUnit_Framework_TestCase extends \PHPUnit\Framework\TestCase
 
 	public function setUp(): void
 	{
-		if (method_exists($this,'set_up'))
-			call_user_func_array([$this,'set_up'],func_get_args());
+		if (method_exists($this, 'set_up'))
+			call_user_func_array([$this, 'set_up'], func_get_args());
 	}
 
 	public function tearDown(): void
 	{
-		if (method_exists($this,'tear_down'))
-			call_user_func_array([$this,'tear_down'],func_get_args());
+		if (method_exists($this, 'tear_down'))
+			call_user_func_array([$this, 'tear_down'], func_get_args());
 	}
 
 	private function setup_assert_keys($args)
 	{
-		$last = count($args)-1;
-		$keys = array_slice($args,0,$last);
+		$last = count($args) - 1;
+		$keys = array_slice($args, 0, $last);
 		$array = $args[$last];
-		return [$keys,$array];
+		return [$keys, $array];
 	}
 
 	public function assert_has_keys(/* $keys..., $array */)
 	{
 		[$keys, $array] = $this->setup_assert_keys(func_get_args());
 
-		$this->assert_not_null($array,'Array was null');
+		$this->assert_not_null($array, 'Array was null');
 
 		foreach ($keys as $name)
-			$this->assert_array_has_key($name,$array);
+			$this->assert_array_has_key($name, $array);
 	}
 
 	public function assert_doesnt_has_keys(/* $keys..., $array */)
@@ -48,17 +49,17 @@ class SnakeCase_PHPUnit_Framework_TestCase extends \PHPUnit\Framework\TestCase
 		[$keys, $array] = $this->setup_assert_keys(func_get_args());
 
 		foreach ($keys as $name)
-			$this->assert_array_not_has_key($name,$array);
+			$this->assert_array_not_has_key($name, $array);
 	}
 
 	public function assert_is_a($expected_class, $object)
 	{
-		$this->assert_equals($expected_class,$object::class);
+		$this->assert_equals($expected_class, $object::class);
 	}
 
 	public function assert_datetime_equals($expected, $actual)
 	{
-		$this->assert_equals($expected->format(DateTime::ISO8601),$actual->format(DateTime::ISO8601));
+		$this->assert_equals($expected->format(DateTime::ISO8601), $actual->format(DateTime::ISO8601));
 	}
 }
 ?>

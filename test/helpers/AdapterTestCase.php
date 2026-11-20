@@ -1,4 +1,5 @@
 <?php
+
 use ActiveRecord\Column;
 
 class AdapterTestCase extends DatabaseTestCase
@@ -12,7 +13,7 @@ class AdapterTestCase extends DatabaseTestCase
         );
         if (
             ($connection_name &&
-                !in_array($connection_name, PDO::getAvailableDrivers())) ||
+                ! in_array($connection_name, PDO::getAvailableDrivers())) ||
             ActiveRecord\Config::instance()->get_connection($connection_name) ==
                 "skip"
         ) {
@@ -54,7 +55,7 @@ class AdapterTestCase extends DatabaseTestCase
     public function test_no_host_connection()
     {
         $this->expectException(ActiveRecord\DatabaseException::class);
-        if (!$GLOBALS["slow_tests"]) {
+        if (! $GLOBALS["slow_tests"]) {
             throw new ActiveRecord\DatabaseException("");
         }
 
@@ -66,7 +67,7 @@ class AdapterTestCase extends DatabaseTestCase
     public function test_connection_failed_invalid_host()
     {
         $this->expectException(ActiveRecord\DatabaseException::class);
-        if (!$GLOBALS["slow_tests"]) {
+        if (! $GLOBALS["slow_tests"]) {
             throw new ActiveRecord\DatabaseException("");
         }
 

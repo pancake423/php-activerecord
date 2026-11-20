@@ -1,4 +1,5 @@
 <?php
+
 use ActiveRecord\Connection;
 
 // Only use this to test static methods in Connection that are not specific

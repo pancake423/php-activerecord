@@ -1,42 +1,69 @@
 <?php
+
 require_once __DIR__ . '/../../ActiveRecord.php';
 
 // initialize ActiveRecord
-ActiveRecord\Config::initialize(function($cfg): void
+ActiveRecord\Config::initialize(function ($cfg): void
 {
     $cfg->set_model_directory(__DIR__ . '/models');
-    $cfg->set_connections(['development' => 'mysql://test:test@127.0.0.1/orders_test']);
+    $cfg->set_connections([
+        'development' => 'mysql://test:test@127.0.0.1/orders_test',
+    ]);
 
 	// you can change the default connection with the below
-    //$cfg->set_default_connection('production');
+    // $cfg->set_default_connection('production');
 });
 
 // create some people
-$jax = new Person(['name' => 'Jax', 'state' => 'CA']);
+$jax = new Person([
+    'name' => 'Jax',
+    'state' => 'CA',
+]);
 $jax->save();
 
 // compact way to create and save a model
-$tito = Person::create(['name' => 'Tito', 'state' => 'VA']);
+$tito = Person::create([
+    'name' => 'Tito',
+    'state' => 'VA',
+]);
 
 // place orders. tax is automatically applied in a callback
 // create_orders will automatically place the created model into $tito->orders
 // even if it failed validation
-$pokemon = $tito->create_orders(['item_name' => 'Live Pokemon', 'price' => 6999.99]);
-$coal    = $tito->create_orders(['item_name' => 'Lump of Coal', 'price' => 100.00]);
-$freebie = $tito->create_orders(['item_name' => 'Freebie', 'price' => -100.99]);
+$pokemon = $tito->create_orders([
+    'item_name' => 'Live Pokemon',
+    'price' => 6999.99,
+]);
+$coal = $tito->create_orders([
+    'item_name' => 'Lump of Coal',
+    'price' => 100.00,
+]);
+$freebie = $tito->create_orders([
+    'item_name' => 'Freebie',
+    'price' => -100.99,
+]);
 
 if (count($freebie->errors) > 0)
-	echo "[FAILED] saving order $freebie->item_name: " . implode(', ',$freebie->errors->full_messages()) . "\n\n";
+	echo "[FAILED] saving order $freebie->item_name: " . implode(', ', $freebie->errors->full_messages()) . "\n\n";
 
 // payments
-$pokemon->create_payments(['amount' => 1.99, 'person_id' => $tito->id]);
-$pokemon->create_payments(['amount' => 4999.50, 'person_id' => $tito->id]);
-$pokemon->create_payments(['amount' => 2.50, 'person_id' => $jax->id]);
+$pokemon->create_payments([
+    'amount' => 1.99,
+    'person_id' => $tito->id,
+]);
+$pokemon->create_payments([
+    'amount' => 4999.50,
+    'person_id' => $tito->id,
+]);
+$pokemon->create_payments([
+    'amount' => 2.50,
+    'person_id' => $jax->id,
+]);
 
 // reload since we don't want the freebie to show up (because it failed validation)
 $tito->reload();
 
-echo "$tito->name has " . count($tito->orders) . " orders for: " . implode(', ',ActiveRecord\collect($tito->orders,'item_name')) . "\n\n";
+echo "$tito->name has " . count($tito->orders) . " orders for: " . implode(', ', ActiveRecord\collect($tito->orders, 'item_name')) . "\n\n";
 
 // get all orders placed by Tito
 foreach (Order::find_all_by_person_id($tito->id) as $order)
@@ -49,21 +76,21 @@ foreach (Order::find_all_by_person_id($tito->id) as $order)
 		foreach ($order->payments as $payment)
 			echo "  payment #$payment->id of $$payment->amount by " . $payment->person->name . "\n";
 	}
-	else
-		echo "  no payments\n";
+	else echo "  no payments\n";
 
 	echo "\n";
 }
 
 // display summary of all payments made by Tito and Jax
 $conditions = [
-	'conditions'	=> ['id IN(?)',[$tito->id,$jax->id]],
-	'order'			=> 'name desc'];
+    'conditions' => ['id IN(?)', [$tito->id, $jax->id]],
+    'order' => 'name desc',
+];
 
 foreach (Person::all($conditions) as $person)
 {
 	$n = count($person->payments);
-	$total = array_sum(ActiveRecord\collect($person->payments,'amount'));
+	$total = array_sum(ActiveRecord\collect($person->payments, 'amount'));
 	echo "$person->name made $n payments for a total of $$total\n\n";
 }
 

@@ -1,11 +1,12 @@
 <?php
+
 use ActiveRecord\Cache;
 
 class CacheModelTest extends DatabaseTestCase
 {
-	public function set_up($connection_name=null)
+	public function set_up($connection_name = null)
 	{
-		if (!extension_loaded('memcache'))
+		if (! extension_loaded('memcache'))
 		{
 			$this->markTestSkipped('The memcache extension is not available');
 			return;
@@ -29,12 +30,12 @@ class CacheModelTest extends DatabaseTestCase
 
 	public function test_default_expire()
 	{
-		$this->assert_equals(30,Author::table()->cache_model_expire);
+		$this->assert_equals(30, Author::table()->cache_model_expire);
 	}
 
 	public function test_explicit_expire()
 	{
-		$this->assert_equals(2592000,Publisher::table()->cache_model_expire);
+		$this->assert_equals(2592000, Publisher::table()->cache_model_expire);
 	}
 
 	public function test_cache_key()
@@ -58,7 +59,7 @@ class CacheModelTest extends DatabaseTestCase
 	public function test_model_cache_new()
 	{
 		$publisher = new Publisher([
-		   "name"=>"HarperCollins"
+		    "name" => "HarperCollins",
 		]);
 		$publisher->save();
 
@@ -76,7 +77,7 @@ class CacheModelTest extends DatabaseTestCase
 		$method = $this->set_method_public('Publisher', 'cache_key');
 		$publishers = Publisher::all();
 
-		foreach($publishers as $publisher)
+		foreach ($publishers as $publisher)
 		{
 			$cache_key = $method->invokeArgs($publisher, []);
 			$publisherDirectlyFromCache = Cache::$adapter->read($cache_key);

@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../../ActiveRecord.php';
 
 class Book extends ActiveRecord\Model
@@ -17,12 +18,12 @@ class Book extends ActiveRecord\Model
 }
 
 $connections = [
-	'development' => 'mysql://invalid',
-	'production' => 'mysql://test:test@127.0.0.1/test'
+    'development' => 'mysql://invalid',
+    'production' => 'mysql://test:test@127.0.0.1/test',
 ];
 
 // initialize ActiveRecord
-ActiveRecord\Config::initialize(function($cfg) use ($connections): void
+ActiveRecord\Config::initialize(function ($cfg) use ($connections): void
 {
     $cfg->set_model_directory('.');
     $cfg->set_connections($connections);

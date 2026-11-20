@@ -1,4 +1,5 @@
 <?php
+
 namespace ActiveRecord;
 use Closure;
 
@@ -11,6 +12,7 @@ use Closure;
 class Cache
 {
 	static $adapter = null;
+
 	static $options = [];
 
 	/**
@@ -37,7 +39,7 @@ class Cache
 	 * @param string $url URL to your cache server
 	 * @param array $options Specify additional options
 	 */
-	public static function initialize($url, $options=[])
+	public static function initialize($url, $options = [])
 	{
 		if ($url)
 		{
@@ -47,10 +49,12 @@ class Cache
 			require_once __DIR__ . "/cache/$file.php";
 			static::$adapter = new $class($url);
 		}
-		else
-			static::$adapter = null;
+		else static::$adapter = null;
 
-		static::$options = array_merge(['expire' => 30, 'namespace' => ''],$options);
+		static::$options = array_merge([
+		    'expire' => 30,
+		    'namespace' => '',
+		], $options);
 	}
 
 	public static function flush()
@@ -62,29 +66,27 @@ class Cache
 	/**
 	 * Attempt to retrieve a value from cache using a key. If the value is not found, then the closure method
 	 * will be invoked, and the result will be stored in cache using that key.
-	 * @param $key
-	 * @param $closure
 	 * @param $expire in seconds
 	 * @return mixed
 	 */
-	public static function get($key, $closure, $expire=null)
+	public static function get($key, $closure, $expire = null)
 	{
-		if (!static::$adapter)
+		if (! static::$adapter)
 			return $closure();
 
 		$expire ??= static::$options['expire'];
 
 		$key = static::get_namespace() . $key;
 
-		if (!($value = static::$adapter->read($key)))
+		if (! ($value = static::$adapter->read($key)))
 			static::$adapter->write($key, ($value = $closure()), $expire);
 
 		return $value;
 	}
 
-	public static function set($key, $var, $expire=null)
+	public static function set($key, $var, $expire = null)
 	{
-		if (!static::$adapter)
+		if (! static::$adapter)
 			return;
 
 		$expire ??= static::$options['expire'];
@@ -95,7 +97,7 @@ class Cache
 
 	public static function delete($key)
 	{
-		if (!static::$adapter)
+		if (! static::$adapter)
 			return;
 
 		$key = static::get_namespace() . $key;

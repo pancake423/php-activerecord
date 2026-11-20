@@ -1,17 +1,14 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 
 /**
  * Adapter for Postgres (not completed yet)
- * 
- * @package ActiveRecord
  */
 class PgsqlAdapter extends Connection
 {
 	static $QUOTE_CHARACTER = '"';
+
 	static $DEFAULT_PORT = 5432;
 
 	public function supports_sequences()
@@ -26,7 +23,7 @@ class PgsqlAdapter extends Connection
 
 	public function next_sequence_value($sequence_name)
 	{
-		return "nextval('" . str_replace("'","\\'",$sequence_name) . "')";
+		return "nextval('" . str_replace("'", "\\'", $sequence_name) . "')";
 	}
 
 	public function limit($sql, $offset, $limit)
@@ -61,7 +58,7 @@ WHERE c.relname = ?
 ORDER BY a.attnum
 SQL;
 		$values = [$table];
-		return $this->query($sql,$values);
+		return $this->query($sql, $values);
 	}
 
 	public function query_for_tables()
@@ -72,11 +69,11 @@ SQL;
 	public function create_column(&$column)
 	{
 		$c = new Column();
-		$c->inflected_name	= Inflector::instance()->variablize($column['field']);
-		$c->name			= $column['field'];
-		$c->nullable		= ($column['not_nullable'] ? false : true);
-		$c->pk				= ($column['pk'] ? true : false);
-		$c->auto_increment	= false;
+		$c->inflected_name = Inflector::instance()->variablize($column['field']);
+		$c->name = $column['field'];
+		$c->nullable = ($column['not_nullable'] ? false : true);
+		$c->pk = ($column['pk'] ? true : false);
+		$c->auto_increment = false;
 
 		if (str_starts_with($column['type'], 'timestamp'))
 		{
@@ -88,9 +85,8 @@ SQL;
 			$c->raw_type = 'date';
 			$c->length = 10;
 		}
-		else
-		{
-			preg_match('/^([A-Za-z0-9_]+)(\(([0-9]+(,[0-9]+)?)\))?/',$column['type'],$matches);
+		else {
+			preg_match('/^([A-Za-z0-9_]+)(\(([0-9]+(,[0-9]+)?)\))?/', $column['type'], $matches);
 
 			$c->raw_type = (count($matches) > 0 ? $matches[1] : $column['type']);
 			$c->length = count($matches) >= 4 ? intval($matches[3]) : intval($column['attlen']);
@@ -103,12 +99,11 @@ SQL;
 
 		if ($column['default'])
 		{
-			preg_match("/^nextval\('(.*)'\)$/",$column['default'],$matches);
+			preg_match("/^nextval\('(.*)'\)$/", $column['default'], $matches);
 
 			if (count($matches) == 2)
 				$c->sequence = $matches[1];
-			else
-				$c->default = $c->cast($column['default'],$this);
+			else $c->default = $c->cast($column['default'], $this);
 		}
 		return $c;
 	}
@@ -121,17 +116,38 @@ SQL;
 	public function native_database_types()
 	{
 		return [
-			'primary_key' => 'serial primary key',
-			'string' => ['name' => 'character varying', 'length' => 255],
-			'text' => ['name' => 'text'],
-			'integer' => ['name' => 'integer'],
-			'float' => ['name' => 'float'],
-			'datetime' => ['name' => 'datetime'],
-			'timestamp' => ['name' => 'timestamp'],
-			'time' => ['name' => 'time'],
-			'date' => ['name' => 'date'],
-			'binary' => ['name' => 'binary'],
-			'boolean' => ['name' => 'boolean']
+		    'primary_key' => 'serial primary key',
+		    'string' => [
+		        'name' => 'character varying',
+		        'length' => 255,
+		    ],
+		    'text' => [
+		        'name' => 'text',
+		    ],
+		    'integer' => [
+		        'name' => 'integer',
+		    ],
+		    'float' => [
+		        'name' => 'float',
+		    ],
+		    'datetime' => [
+		        'name' => 'datetime',
+		    ],
+		    'timestamp' => [
+		        'name' => 'timestamp',
+		    ],
+		    'time' => [
+		        'name' => 'time',
+		    ],
+		    'date' => [
+		        'name' => 'date',
+		    ],
+		    'binary' => [
+		        'name' => 'binary',
+		    ],
+		    'boolean' => [
+		        'name' => 'boolean',
+		    ],
 		];
 	}
 

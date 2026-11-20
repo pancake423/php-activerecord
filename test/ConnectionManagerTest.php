@@ -20,7 +20,7 @@ class ConnectionManagerTest extends DatabaseTestCase
 		$a = ConnectionManager::get_connection('mysql');
 		$a->harro = 'harro there';
 
-		$this->assert_same($a,ConnectionManager::get_connection('mysql'));
+		$this->assert_same($a, ConnectionManager::get_connection('mysql'));
 	}
 
     public function test_gh_91_get_connection_with_null_connection_is_always_default()

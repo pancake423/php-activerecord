@@ -5,7 +5,10 @@ class ActiveRecordTest extends DatabaseTestCase
     public function set_up($connection_name = null)
     {
         parent::set_up($connection_name);
-        $this->options = ["conditions" => "blah", "order" => "blah"];
+        $this->options = [
+            "conditions" => "blah",
+            "order" => "blah",
+        ];
     }
 
     public function test_options_is_not()
@@ -76,7 +79,9 @@ class ActiveRecordTest extends DatabaseTestCase
     public function test_invalid_attribute()
     {
         $this->expectException(ActiveRecord\ActiveRecordException::class);
-        $author = Author::find("first", ["conditions" => "author_id=1"]);
+        $author = Author::find("first", [
+            "conditions" => "author_id=1",
+        ]);
         $author->some_invalid_field_name;
     }
 
@@ -119,7 +124,9 @@ class ActiveRecordTest extends DatabaseTestCase
         $this->assert_exception_message_contains(
             "Author->this_better_not_exist",
             function (): void {
-                new Author(["this_better_not_exist" => "hi"]);
+                new Author([
+                    "this_better_not_exist" => "hi",
+                ]);
             },
         );
     }
@@ -271,7 +278,9 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_should_have_all_column_attributes_when_initializing_with_array()
     {
-        $author = new Author(["name" => "Tito"]);
+        $author = new Author([
+            "name" => "Tito",
+        ]);
         $this->assert_true(count(array_keys($author->attributes())) >= 9);
     }
 
@@ -302,7 +311,10 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_alias_from_mass_attributes()
     {
-        $venue = new Venue(["marquee" => "meme", "id" => 123]);
+        $venue = new Venue([
+            "marquee" => "meme",
+            "id" => 123,
+        ]);
         $this->assert_equals("meme", $venue->name);
         $this->assert_equals($venue->marquee, $venue->name);
     }
@@ -326,7 +338,9 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_attr_protected()
     {
-        $book = new BookAttrAccessible(["book_id" => 999]);
+        $book = new BookAttrAccessible([
+            "book_id" => 999,
+        ]);
         $this->assert_null($book->book_id);
         $book->book_id = 999;
         $this->assert_equals(999, $book->book_id);
@@ -341,7 +355,9 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_readonly_only_halt_on_write_method()
     {
-        $book = Book::first(["readonly" => true]);
+        $book = Book::first([
+            "readonly" => true,
+        ]);
         $this->assert_true($book->is_readonly());
 
         try {
@@ -378,7 +394,9 @@ class ActiveRecordTest extends DatabaseTestCase
     {
         $original = Author::count();
         $ret = Author::transaction(function (): void {
-            Author::create(["name" => "blah"]);
+            Author::create([
+                "name" => "blah",
+            ]);
         });
         $this->assert_equals($original + 1, Author::count());
         $this->assert_true($ret);
@@ -388,7 +406,9 @@ class ActiveRecordTest extends DatabaseTestCase
     {
         $original = Author::count();
         $ret = Author::transaction(function () {
-            Author::create(["name" => "blah"]);
+            Author::create([
+                "name" => "blah",
+            ]);
             return true;
         });
         $this->assert_equals($original + 1, Author::count());
@@ -400,7 +420,9 @@ class ActiveRecordTest extends DatabaseTestCase
         $original = Author::count();
 
         $ret = Author::transaction(function () {
-            Author::create(["name" => "blah"]);
+            Author::create([
+                "name" => "blah",
+            ]);
             return false;
         });
 
@@ -415,7 +437,9 @@ class ActiveRecordTest extends DatabaseTestCase
 
         try {
             Author::transaction(function (): void {
-                Author::create(["name" => "blah"]);
+                Author::create([
+                    "name" => "blah",
+                ]);
                 throw new Exception("blah");
             });
         } catch (Exception $e) {
@@ -565,7 +589,9 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_gh245_dirty_attribute_should_not_raise_php_notice_if_not_dirty()
     {
-        $event = new Event(["title" => "Fun"]);
+        $event = new Event([
+            "title" => "Fun",
+        ]);
         $this->assert_false($event->attribute_is_dirty("description"));
         $this->assert_true($event->attribute_is_dirty("title"));
     }
@@ -589,7 +615,9 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_assigning_from_mass_assignment_php_datetime_gets_converted_to_ar_datetime()
     {
-        $author = new Author(["created_at" => new \DateTime()]);
+        $author = new Author([
+            "created_at" => new \DateTime(),
+        ]);
         $this->assert_is_a(\ActiveRecord\DateTime::class, $author->created_at);
     }
 
@@ -609,7 +637,9 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_id_setter_works_with_table_without_pk_named_attribute()
     {
-        $author = new Author(["id" => 123]);
+        $author = new Author([
+            "id" => 123,
+        ]);
         $this->assert_equals(123, $author->author_id);
     }
 
@@ -624,7 +654,9 @@ class ActiveRecordTest extends DatabaseTestCase
         $row = Author::query("SELECT COUNT(*) AS n FROM authors WHERE name=?", [
             "Tito",
         ])->fetch();
-        $this->assert_equals(["n" => 1], $row);
+        $this->assert_equals([
+            "n" => 1,
+        ], $row);
     }
 }
 ?>

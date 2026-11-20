@@ -1,23 +1,24 @@
 <?php
-/**
- * @package ActiveRecord
- */
+
 namespace ActiveRecord;
 
 /**
  * Class for a table column.
- *
- * @package ActiveRecord
  */
 class Column
 {
 	// types for $type
-	const STRING	= 1;
-	const INTEGER	= 2;
-	const DECIMAL	= 3;
-	const DATETIME	= 4;
-	const DATE		= 5;
-	const TIME		= 6;
+	const STRING = 1;
+
+	const INTEGER = 2;
+
+	const DECIMAL = 3;
+
+	const DATETIME = 4;
+
+	const DATE = 5;
+
+	const TIME = 6;
 
 	/**
 	 * Map a type to an column type.
@@ -25,22 +26,23 @@ class Column
 	 * @var array
 	 */
 	static $TYPE_MAPPING = [
-		'datetime'	=> self::DATETIME,
-		'timestamp'	=> self::DATETIME,
-		'date'		=> self::DATE,
-		'time'		=> self::TIME,
+	    'datetime' => self::DATETIME,
+	    'timestamp' => self::DATETIME,
+	    'date' => self::DATE,
+	    'time' => self::TIME,
 
-		'tinyint'	=> self::INTEGER,
-		'smallint'	=> self::INTEGER,
-		'mediumint'	=> self::INTEGER,
-		'int'		=> self::INTEGER,
-		'bigint'	=> self::INTEGER,
+	    'tinyint' => self::INTEGER,
+	    'smallint' => self::INTEGER,
+	    'mediumint' => self::INTEGER,
+	    'int' => self::INTEGER,
+	    'bigint' => self::INTEGER,
 
-		'float'		=> self::DECIMAL,
-		'double'	=> self::DECIMAL,
-		'numeric'	=> self::DECIMAL,
-		'decimal'	=> self::DECIMAL,
-		'dec'		=> self::DECIMAL];
+	    'float' => self::DECIMAL,
+	    'double' => self::DECIMAL,
+	    'numeric' => self::DECIMAL,
+	    'decimal' => self::DECIMAL,
+	    'dec' => self::DECIMAL,
+	];
 
 	/**
 	 * The true name of this column.
@@ -56,7 +58,7 @@ class Column
 
 	/**
 	 * The type of this column: STRING, INTEGER, ...
-	 * @var integer
+	 * @var int
 	 */
 	public $type;
 
@@ -74,13 +76,13 @@ class Column
 
 	/**
 	 * True if this column allows null.
-	 * @var boolean
+	 * @var bool
 	 */
 	public $nullable;
 
 	/**
 	 * True if this column is a primary key.
-	 * @var boolean
+	 * @var bool
 	 */
 	public $pk;
 
@@ -92,13 +94,13 @@ class Column
 
 	/**
 	 * True if this column is set to auto_increment.
-	 * @var boolean
+	 * @var bool
 	 */
 	public $auto_increment;
 
 	/**
 	 * Name of the sequence to use for this column if any.
-	 * @var boolean
+	 * @var bool
 	 */
 	public $sequence;
 
@@ -157,12 +159,12 @@ class Column
 
 		switch ($this->type)
 		{
-			case self::STRING:	return (string)$value;
+			case self::STRING:	return (string) $value;
 			case self::INTEGER:	return static::castIntegerSafely($value);
-			case self::DECIMAL:	return (double)$value;
+			case self::DECIMAL:	return (double) $value;
 			case self::DATETIME:
 			case self::DATE:
-				if (!$value)
+				if (! $value)
 					return null;
 
 				$date_class = Config::instance()->get_date_class();
@@ -187,10 +189,9 @@ class Column
 		if ($this->raw_type == 'integer')
 			$this->raw_type = 'int';
 
-		if (array_key_exists($this->raw_type,self::$TYPE_MAPPING))
+		if (array_key_exists($this->raw_type, self::$TYPE_MAPPING))
 			$this->type = self::$TYPE_MAPPING[$this->raw_type];
-		else
-			$this->type = self::STRING;
+		else $this->type = self::STRING;
 
 		return $this->type;
 	}
