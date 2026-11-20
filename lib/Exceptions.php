@@ -22,16 +22,15 @@ class DatabaseException extends ActiveRecordException
     public function __construct($adapter_or_string_or_mystery)
     {
         if ($adapter_or_string_or_mystery instanceof Connection) {
-            $error_info = $adapter_or_string_or_mystery->connection->errorInfo();
-            $error_code = $adapter_or_string_or_mystery->connection->errorCode();
-            $error_message = "Database error $error_info, $error_code.";
+            $error_info = implode(", ", $adapter_or_string_or_mystery->connection->errorInfo());
+            $error_message = "Database error $error_info";
             try {
                 if ($adapter_or_string_or_mystery->last_query) {
-                    $error_message .= " Last SQL query: {$adapter_or_string_or_mystery->last_query}";
+                    $error_message .= "\n Last SQL query: {$adapter_or_string_or_mystery->last_query}";
                 }
                 if ($adapter_or_string_or_mystery->last_values) {
                     $error_message .=
-                        " Last bound parameters: " .
+                        "\n Last bound parameters: " .
                         implode(", ", $adapter_or_string_or_mystery->last_values);
                 }
             } catch (\Exception $e) {
