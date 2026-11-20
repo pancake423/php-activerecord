@@ -6,9 +6,9 @@ use Rector\Config\RectorConfig;
 
 return RectorConfig::configure()
     ->withPaths([
-        __DIR__ . '/examples',
-        __DIR__ . '/lib',
-        __DIR__ . '/test',
+        __DIR__.'/examples',
+        __DIR__.'/lib',
+        __DIR__.'/test',
     ])
     // uncomment to reach your current PHP version
     ->withPhpSets()

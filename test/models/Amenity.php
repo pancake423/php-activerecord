@@ -1,13 +1,14 @@
 <?php
 
-class Amenity extends ActiveRecord\Model
+use ActiveRecord\Model;
+
+class Amenity extends Model
 {
-	static $table_name = 'amenities';
+    public static $table_name = 'amenities';
 
-	static $primary_key = 'amenity_id';
+    public static $primary_key = 'amenity_id';
 
-	static $has_many = [
-	    'property_amenities',
-	];
+    public static $has_many = [
+        'property_amenities',
+    ];
 };
-?>

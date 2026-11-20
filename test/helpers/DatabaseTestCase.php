@@ -1,6 +1,12 @@
 <?php
 
-require_once __DIR__ . "/DatabaseLoader.php";
+use ActiveRecord\Config;
+use ActiveRecord\ConnectionManager;
+use ActiveRecord\DatabaseException;
+use ActiveRecord\Table;
+use ActiveRecord\UndefinedPropertyException;
+
+require_once __DIR__.'/DatabaseLoader.php';
 
 class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
 {
@@ -18,9 +24,9 @@ class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
 
     public function set_up($connection_name = null)
     {
-        ActiveRecord\Table::clear_cache();
+        Table::clear_cache();
 
-        $config = ActiveRecord\Config::instance();
+        $config = Config::instance();
         $this->original_default_connection = $config->get_default_connection();
 
         $this->original_date_class = $config->get_date_class();
@@ -30,12 +36,12 @@ class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
         }
 
         if (
-            $connection_name == "sqlite" ||
-            $config->get_default_connection() == "sqlite"
+            $connection_name == 'sqlite' ||
+            $config->get_default_connection() == 'sqlite'
         ) {
             // need to create the db. the adapter specifically does not create it for us.
             static::$db = substr(
-                ActiveRecord\Config::instance()->get_connection("sqlite"),
+                Config::instance()->get_connection('sqlite'),
                 9,
             );
             new SQLite3(static::$db);
@@ -43,32 +49,32 @@ class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
 
         $this->connection_name = $connection_name;
         try {
-            $this->conn = ActiveRecord\ConnectionManager::get_connection(
+            $this->conn = ConnectionManager::get_connection(
                 $connection_name,
             );
-        } catch (ActiveRecord\DatabaseException $e) {
+        } catch (DatabaseException $e) {
             $this->mark_test_skipped(
-                $connection_name . " failed to connect. " . $e->getMessage(),
+                $connection_name.' failed to connect. '.$e->getMessage(),
             );
         }
 
-        $GLOBALS["ACTIVERECORD_LOG"] = false;
+        $GLOBALS['ACTIVERECORD_LOG'] = false;
 
         $loader = new DatabaseLoader($this->conn);
         $loader->reset_table_data();
 
         if (self::$log) {
-            $GLOBALS["ACTIVERECORD_LOG"] = true;
+            $GLOBALS['ACTIVERECORD_LOG'] = true;
         }
     }
 
     public function tear_down()
     {
-        ActiveRecord\Config::instance()->set_date_class(
+        Config::instance()->set_date_class(
             $this->original_date_class,
         );
         if ($this->original_default_connection) {
-            ActiveRecord\Config::instance()->set_default_connection(
+            Config::instance()->set_default_connection(
                 $this->original_default_connection,
             );
         }
@@ -76,11 +82,11 @@ class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
 
     public function assert_exception_message_contains($contains, $closure)
     {
-        $message = "";
+        $message = '';
 
         try {
             $closure();
-        } catch (ActiveRecord\UndefinedPropertyException $e) {
+        } catch (UndefinedPropertyException $e) {
             $message = $e->getMessage();
         }
 
@@ -95,15 +101,17 @@ class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
      */
     public function assert_sql_has($needle, $haystack)
     {
-        $needle = str_replace(['"', "`"], "", $needle);
-        $haystack = str_replace(['"', "`"], "", $haystack);
+        $needle = str_replace(['"', '`'], '', $needle);
+        $haystack = str_replace(['"', '`'], '', $haystack);
+
         return $this->assertStringContainsString($needle, $haystack);
     }
 
     public function assert_sql_doesnt_has($needle, $haystack)
     {
-        $needle = str_replace(['"', "`"], "", $needle);
-        $haystack = str_replace(['"', "`"], "", $haystack);
+        $needle = str_replace(['"', '`'], '', $needle);
+        $haystack = str_replace(['"', '`'], '', $haystack);
+
         return $this->assertStringNotContainsString($needle, $haystack);
     }
 
@@ -112,4 +120,3 @@ class DatabaseTestCase extends SnakeCase_PHPUnit_Framework_TestCase
         $this->assertTrue(true);
     }
 }
-?>

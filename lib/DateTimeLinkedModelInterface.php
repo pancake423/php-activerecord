@@ -11,11 +11,11 @@ namespace ActiveRecord;
  */
 interface DateTimeLinkedModelInterface
 {
-	/**
-	 * Indicates this object is an attribute of the specified model, with the given attribute name.
-	 *
-	 * @param Model $model The model this object is an attribute of
-	 * @param string $attribute_name The attribute name
-	 */
-	public function attribute_of($model, $attribute_name);
+    /**
+     * Indicates this object is an attribute of the specified model, with the given attribute name.
+     *
+     * @param  Model  $model  The model this object is an attribute of
+     * @param  string  $attribute_name  The attribute name
+     */
+    public function attribute_of($model, $attribute_name);
 }

@@ -1,14 +1,15 @@
 <?php
 
-class PropertyAmenity extends ActiveRecord\Model
+use ActiveRecord\Model;
+
+class PropertyAmenity extends Model
 {
-	static $table_name = 'property_amenities';
+    public static $table_name = 'property_amenities';
 
-	static $primary_key = 'id';
+    public static $primary_key = 'id';
 
-	static $belongs_to = [
-	    'amenity',
-	    'property',
-	];
+    public static $belongs_to = [
+        'amenity',
+        'property',
+    ];
 };
-?>

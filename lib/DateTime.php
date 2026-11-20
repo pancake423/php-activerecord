@@ -30,35 +30,33 @@ namespace ActiveRecord;
  *
  * @see http://php.net/manual/en/class.datetime.php
  */
-class DateTime extends \DateTime implements
-    DateTimeLinkedModelInterface,
-    \Stringable
+class DateTime extends \DateTime implements \Stringable, DateTimeLinkedModelInterface
 {
     /**
      * Default format used for format() and __toString()
      */
-    public static $DEFAULT_FORMAT = "rfc2822";
+    public static $DEFAULT_FORMAT = 'rfc2822';
 
     /**
      * Pre-defined format strings.
      */
     public static $FORMATS = [
-        "db" => "Y-m-d H:i:s",
-        "number" => "YmdHis",
-        "time" => "H:i",
-        "short" => "d M H:i",
-        "long" => "F d, Y H:i",
-        "atom" => \DateTime::ATOM,
-        "cookie" => \DateTime::COOKIE,
-        "iso8601" => \DateTime::ISO8601,
-        "rfc822" => \DateTime::RFC822,
-        "rfc850" => \DateTime::RFC850,
-        "rfc1036" => \DateTime::RFC1036,
-        "rfc1123" => \DateTime::RFC1123,
-        "rfc2822" => \DateTime::RFC2822,
-        "rfc3339" => \DateTime::RFC3339,
-        "rss" => \DateTime::RSS,
-        "w3c" => \DateTime::W3C,
+        'db' => 'Y-m-d H:i:s',
+        'number' => 'YmdHis',
+        'time' => 'H:i',
+        'short' => 'd M H:i',
+        'long' => 'F d, Y H:i',
+        'atom' => \DateTime::ATOM,
+        'cookie' => \DateTime::COOKIE,
+        'iso8601' => \DateTime::ISO8601,
+        'rfc822' => \DateTime::RFC822,
+        'rfc850' => \DateTime::RFC850,
+        'rfc1036' => \DateTime::RFC1036,
+        'rfc1123' => \DateTime::RFC1123,
+        'rfc2822' => \DateTime::RFC2822,
+        'rfc3339' => \DateTime::RFC3339,
+        'rss' => \DateTime::RSS,
+        'w3c' => \DateTime::W3C,
     ];
 
     private $model;
@@ -82,7 +80,8 @@ class DateTime extends \DateTime implements
      *
      * @see FORMATS
      * @see get_format
-     * @param string $format A format string accepted by get_format()
+     *
+     * @param  string  $format  A format string accepted by get_format()
      * @return string formatted date and time string
      */
     public function format($format = null): string
@@ -97,7 +96,8 @@ class DateTime extends \DateTime implements
      * it will assume $format is a format string itself.
      *
      * @see FORMATS
-     * @param string $format A pre-defined string format or a raw format string
+     *
+     * @param  string  $format  A pre-defined string format or a raw format string
      * @return string a format string
      */
     public static function get_format($format = null)
@@ -138,6 +138,7 @@ class DateTime extends \DateTime implements
         // convert to this class using the timestamp
         $ourDate = new static();
         $ourDate->setTimestamp($phpDate->getTimestamp());
+
         return $ourDate;
     }
 
@@ -156,14 +157,16 @@ class DateTime extends \DateTime implements
     public function setDate($year, $month, $day): self
     {
         $this->flag_dirty();
-        call_user_func_array([$this, "parent::setDate"], func_get_args());
+        call_user_func_array([$this, 'parent::setDate'], func_get_args());
+
         return $this;
     }
 
     public function setISODate($year, $week, $day = null): self
     {
         $this->flag_dirty();
-        call_user_func_array([$this, "parent::setISODate"], func_get_args());
+        call_user_func_array([$this, 'parent::setISODate'], func_get_args());
+
         return $this;
     }
 
@@ -174,7 +177,8 @@ class DateTime extends \DateTime implements
         $microsecond = null,
     ): self {
         $this->flag_dirty();
-        call_user_func_array([$this, "parent::setTime"], func_get_args());
+        call_user_func_array([$this, 'parent::setTime'], func_get_args());
+
         return $this;
     }
 
@@ -182,6 +186,7 @@ class DateTime extends \DateTime implements
     {
         $this->flag_dirty();
         parent::setTimestamp(...);
+
         return $this;
     }
 }

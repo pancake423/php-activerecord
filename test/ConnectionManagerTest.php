@@ -4,26 +4,26 @@ use ActiveRecord\ConnectionManager;
 
 class ConnectionManagerTest extends DatabaseTestCase
 {
-	public function test_get_connection_with_null_connection()
-	{
-		$this->assert_not_null(ConnectionManager::get_connection(null));
-		$this->assert_not_null(ConnectionManager::get_connection());
-	}
+    public function test_get_connection_with_null_connection()
+    {
+        $this->assert_not_null(ConnectionManager::get_connection(null));
+        $this->assert_not_null(ConnectionManager::get_connection());
+    }
 
-	public function test_get_connection()
-	{
-		$this->assert_not_null(ConnectionManager::get_connection('mysql'));
-	}
+    public function test_get_connection()
+    {
+        $this->assert_not_null(ConnectionManager::get_connection('mysql'));
+    }
 
-	public function test_get_connection_uses_existing_object()
-	{
-		$a = ConnectionManager::get_connection('mysql');
-		$a->harro = 'harro there';
+    public function test_get_connection_uses_existing_object()
+    {
+        $a = ConnectionManager::get_connection('mysql');
+        $a->harro = 'harro there';
 
-		$this->assert_same($a, ConnectionManager::get_connection('mysql'));
-	}
+        $this->assert_same($a, ConnectionManager::get_connection('mysql'));
+    }
 
-    public function test_gh_91_get_connection_with_null_connection_is_always_default()
+    public function test_gh91_get_connection_with_null_connection_is_always_default()
     {
         $conn_one = ConnectionManager::get_connection('mysql');
         $conn_two = ConnectionManager::get_connection();
@@ -35,4 +35,3 @@ class ConnectionManagerTest extends DatabaseTestCase
         $this->assert_same($conn_four, $conn_three);
     }
 }
-?>

@@ -1,13 +1,14 @@
 <?php
 
-class BookAttrAccessible extends ActiveRecord\Model
+use ActiveRecord\Model;
+
+class BookAttrAccessible extends Model
 {
-	static $pk = 'book_id';
+    public static $pk = 'book_id';
 
-	static $table_name = 'books';
+    public static $table_name = 'books';
 
-	static $attr_accessible = ['author_id'];
+    public static $attr_accessible = ['author_id'];
 
-	static $attr_protected = ['book_id'];
+    public static $attr_protected = ['book_id'];
 };
-?>

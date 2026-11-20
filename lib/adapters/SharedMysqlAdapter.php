@@ -2,7 +2,7 @@
 
 namespace ActiveRecord;
 
-require_once ('MysqlAdapter.php');
+require_once('MysqlAdapter.php');
 
 /**
  * Adapter for MySQL that uses a static connection shared by every instance of this class. For use
@@ -11,34 +11,32 @@ require_once ('MysqlAdapter.php');
  */
 class SharedMysqlAdapter extends MysqlAdapter
 {
-	private $db;
+    private $db;
 
-	static $currentDefaultDb;
+    public static $currentDefaultDb;
 
-	static $sharedConnection;
+    public static $sharedConnection;
 
-	protected function __construct($info)
-	{
-		$this->db = $info->db;
-		if (! isset(self::$sharedConnection))
-		{
-			$info->protocol = 'mysql';
-			parent::__construct($info);
-			self::$sharedConnection = $this->connection;
-		}
-		else {
-			$this->connection = self::$sharedConnection;
-		}
-	}
+    protected function __construct($info)
+    {
+        $this->db = $info->db;
+        if (! isset(self::$sharedConnection)) {
+            $info->protocol = 'mysql';
+            parent::__construct($info);
+            self::$sharedConnection = $this->connection;
+        } else {
+            $this->connection = self::$sharedConnection;
+        }
+    }
 
-	public function query($sql, &$values = [])
-	{
-		if (! isset(self::$currentDefaultDb) || self::$currentDefaultDb != $this->db)
-		{
-			// switch current default database to what this connection would use if it wasn't shared
-			$this->connection->exec('USE ' . $this->db);
-			self::$currentDefaultDb = $this->db;
-		}
-		return parent::query($sql, $values);
-	}
+    public function query($sql, &$values = [])
+    {
+        if (! isset(self::$currentDefaultDb) || self::$currentDefaultDb != $this->db) {
+            // switch current default database to what this connection would use if it wasn't shared
+            $this->connection->exec('USE '.$this->db);
+            self::$currentDefaultDb = $this->db;
+        }
+
+        return parent::query($sql, $values);
+    }
 }

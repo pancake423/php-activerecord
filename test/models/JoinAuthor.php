@@ -1,9 +1,10 @@
 <?php
 
-class JoinAuthor extends ActiveRecord\Model
-{
-	static $table_name = 'authors';
+use ActiveRecord\Model;
 
-	static $pk = 'author_id';
+class JoinAuthor extends Model
+{
+    public static $table_name = 'authors';
+
+    public static $pk = 'author_id';
 };
-?>

@@ -19,39 +19,33 @@ class RecordNotFound extends ActiveRecordException {}
  */
 class DatabaseException extends ActiveRecordException
 {
-	public function __construct($adapter_or_string_or_mystery)
-	{
-		if ($adapter_or_string_or_mystery instanceof Connection)
-		{
-			parent::__construct(
-			    implode(", ", $adapter_or_string_or_mystery->connection->errorInfo()),
-			    intval($adapter_or_string_or_mystery->connection->errorCode())
-			);
-		}
-		elseif ($adapter_or_string_or_mystery instanceof \PDOStatement)
-		{
-			parent::__construct(
-			    implode(", ", $adapter_or_string_or_mystery->errorInfo()),
-			    intval($adapter_or_string_or_mystery->errorCode())
-			);
-		}
-		elseif ($adapter_or_string_or_mystery instanceof \PDOException)
-		{
-			if ($adapter_or_string_or_mystery->errorInfo)
-			{
-				$message = implode(", ", $adapter_or_string_or_mystery->errorInfo);
-			}
-			else {
-				$message = $adapter_or_string_or_mystery->getMessage();
-			}
-			parent::__construct(
-			    $message,
-			    intval($adapter_or_string_or_mystery->getCode()),
-			    $adapter_or_string_or_mystery
-			);
-		}
-		else parent::__construct($adapter_or_string_or_mystery);
-	}
+    public function __construct($adapter_or_string_or_mystery)
+    {
+        if ($adapter_or_string_or_mystery instanceof Connection) {
+            parent::__construct(
+                implode(', ', $adapter_or_string_or_mystery->connection->errorInfo()),
+                intval($adapter_or_string_or_mystery->connection->errorCode())
+            );
+        } elseif ($adapter_or_string_or_mystery instanceof \PDOStatement) {
+            parent::__construct(
+                implode(', ', $adapter_or_string_or_mystery->errorInfo()),
+                intval($adapter_or_string_or_mystery->errorCode())
+            );
+        } elseif ($adapter_or_string_or_mystery instanceof \PDOException) {
+            if ($adapter_or_string_or_mystery->errorInfo) {
+                $message = implode(', ', $adapter_or_string_or_mystery->errorInfo);
+            } else {
+                $message = $adapter_or_string_or_mystery->getMessage();
+            }
+            parent::__construct(
+                $message,
+                intval($adapter_or_string_or_mystery->getCode()),
+                $adapter_or_string_or_mystery
+            );
+        } else {
+            parent::__construct($adapter_or_string_or_mystery);
+        }
+    }
 }
 
 /**
@@ -74,22 +68,22 @@ class ConfigException extends ActiveRecordException {}
  */
 class UndefinedPropertyException extends ModelException
 {
-	/**
-	 * Sets the exception message to show the undefined property's name.
-	 *
-	 * @param string $property_name name of undefined property
-	 */
-	public function __construct($class_name, $property_name)
-	{
-		if (is_array($property_name))
-		{
-			$this->message = implode("\r\n", $property_name);
-			return;
-		}
+    /**
+     * Sets the exception message to show the undefined property's name.
+     *
+     * @param  string  $property_name  name of undefined property
+     */
+    public function __construct($class_name, $property_name)
+    {
+        if (is_array($property_name)) {
+            $this->message = implode("\r\n", $property_name);
 
-		$this->message = "Undefined property: {$class_name}->{$property_name} in {$this->file} on line {$this->line}";
-		parent::__construct();
-	}
+            return;
+        }
+
+        $this->message = "Undefined property: {$class_name}->{$property_name} in {$this->file} on line {$this->line}";
+        parent::__construct();
+    }
 }
 
 /**
@@ -97,17 +91,17 @@ class UndefinedPropertyException extends ModelException
  */
 class ReadOnlyException extends ModelException
 {
-	/**
-	 * Sets the exception message to show the undefined property's name.
-	 *
-	 * @param string $class_name name of the model that is read only
-	 * @param string $method_name name of method which attempted to modify the model
-	 */
-	public function __construct($class_name, $method_name)
-	{
-		$this->message = "{$class_name}::{$method_name}() cannot be invoked because this model is set to read only";
-		parent::__construct();
-	}
+    /**
+     * Sets the exception message to show the undefined property's name.
+     *
+     * @param  string  $class_name  name of the model that is read only
+     * @param  string  $method_name  name of method which attempted to modify the model
+     */
+    public function __construct($class_name, $method_name)
+    {
+        $this->message = "{$class_name}::{$method_name}() cannot be invoked because this model is set to read only";
+        parent::__construct();
+    }
 }
 
 /**

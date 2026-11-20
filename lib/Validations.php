@@ -8,6 +8,7 @@
  */
 
 namespace ActiveRecord;
+
 use ArrayIterator;
 use IteratorAggregate;
 use Traversable;
@@ -39,880 +40,893 @@ use Traversable;
  */
 class Validations
 {
-	private $options = [];
+    private $options = [];
 
-	private $validators = [];
+    private $validators = [];
 
     private $record;
 
-	private $klass;
-
-	private static $VALIDATION_FUNCTIONS = [
-	    'validates_presence_of',
-	    'validates_size_of',
-	    'validates_length_of',
-	    'validates_inclusion_of',
-	    'validates_exclusion_of',
-	    'validates_format_of',
-	    'validates_numericality_of',
-	    'validates_uniqueness_of',
-	];
-
-	private static $DEFAULT_VALIDATION_OPTIONS = [
-	    'on' => 'save',
-	    'allow_null' => false,
-	    'allow_blank' => false,
-	    'message' => null,
-	];
-
-	private static $ALL_RANGE_OPTIONS = [
-	    'is' => null,
-	    'within' => null,
-	    'in' => null,
-	    'minimum' => null,
-	    'maximum' => null,
-	];
-
-	private static $ALL_NUMERICALITY_CHECKS = [
-	    'greater_than' => null,
-	    'greater_than_or_equal_to' => null,
-	    'equal_to' => null,
-	    'less_than' => null,
-	    'less_than_or_equal_to' => null,
-	    'odd' => null,
-	    'even' => null,
-	];
-
-	/**
-	 * Constructs a {@link Validations} object.
-	 *
-	 * @param Model $model The model to validate
-	 * @return Validations
-	 */
-	public function __construct(
-	    private readonly Model $model
-	)
-	{
-		$this->record = new Errors($this->model);
-		$this->klass = Reflections::instance()->get($this->model::class);
-		$this->validators = array_intersect(array_keys($this->klass->getStaticProperties()), self::$VALIDATION_FUNCTIONS);
-	}
-
-	public function get_record()
-	{
-		return $this->record;
-	}
-
-	/**
-	 * Returns validator data.
-	 *
-	 * @return array
-	 */
-	public function rules()
-	{
-		$data = [];
-		foreach ($this->validators as $validate)
-		{
-			$attrs = $this->klass->getStaticPropertyValue($validate);
-
-			foreach (wrap_strings_in_arrays($attrs) as $attr)
-			{
-				$field = $attr[0];
-
-				if (! isset($data[$field]) || ! is_array($data[$field]))
-					$data[$field] = [];
-
-				$attr['validator'] = $validate;
-				unset($attr[0]);
-				array_push($data[$field], $attr);
-			}
-		}
-		return $data;
-	}
-
-	/**
-	 * Runs the validators.
-	 *
-	 * @return Errors the validation errors if any
-	 */
-	public function validate()
-	{
-		foreach ($this->validators as $validate)
-		{
-			$definition = $this->klass->getStaticPropertyValue($validate);
-			$this->{$validate}($definition);
-		}
-
-		$model_reflection = Reflections::instance()->get($this->model);
-
-		if ($model_reflection->hasMethod('validate') && $model_reflection->getMethod('validate')->isPublic())
-			$this->model->validate();
-
-		$this->record->clear_model();
-		return $this->record;
-	}
-
-	/**
-	 * Validates a field is not null and not blank.
-	 *
-	 * <code>
-	 * class Person extends ActiveRecord\Model {
-	 *   static $validates_presence_of = array(
-	 *     array('first_name'),
-	 *     array('last_name')
-	 *   );
-	 * }
-	 * </code>
-	 *
-	 * Available options:
-	 *
-	 * <ul>
-	 * <li><b>message:</b> custom error message</li>
-	 * <li><b>allow_blank:</b> allow blank strings</li>
-	 * <li><b>allow_null:</b> allow null strings</li>
-	 * </ul>
-	 *
-	 * @param array $attrs Validation definition
-	 */
-	public function validates_presence_of($attrs)
-	{
-		$configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
-		    'message' => Errors::$DEFAULT_ERROR_MESSAGES['blank'],
-		    'on' => 'save',
-		]);
-
-		foreach ($attrs as $attr)
-		{
-			$options = array_merge($configuration, is_array($attr) ? $attr : [$attr]);
-			$this->record->add_on_blank($options[0], $options['message']);
-		}
-	}
-
-	/**
-	 * Validates that a value is included the specified array.
-	 *
-	 * <code>
-	 * class Car extends ActiveRecord\Model {
-	 *   static $validates_inclusion_of = array(
-	 *     array('fuel_type', 'in' => array('hyrdogen', 'petroleum', 'electric')),
-	 *   );
-	 * }
-	 * </code>
-	 *
-	 * Available options:
-	 *
-	 * <ul>
-	 * <li><b>in/within:</b> attribute should/shouldn't be a value within an array</li>
-	 * <li><b>message:</b> custome error message</li>
-	 * <li><b>allow_blank:</b> allow blank strings</li>
-	 * <li><b>allow_null:</b> allow null strings</li>
-	 * </ul>
-	 *
-	 * @param array $attrs Validation definition
-	 */
-	public function validates_inclusion_of($attrs)
-	{
-		$this->validates_inclusion_or_exclusion_of('inclusion', $attrs);
-	}
-
-	/**
-	 * This is the opposite of {@link validates_include_of}.
-	 *
-	 * Available options:
-	 *
-	 * <ul>
-	 * <li><b>in/within:</b> attribute should/shouldn't be a value within an array</li>
-	 * <li><b>message:</b> custome error message</li>
-	 * <li><b>allow_blank:</b> allow blank strings</li>
-	 * <li><b>allow_null:</b> allow null strings</li>
-	 * </ul>
-	 *
-	 * @param array $attrs Validation definition
-	 * @see validates_inclusion_of
-	 */
-	public function validates_exclusion_of($attrs)
-	{
-		$this->validates_inclusion_or_exclusion_of('exclusion', $attrs);
-	}
-
-	/**
-	 * Validates that a value is in or out of a specified list of values.
-	 *
-	 * Available options:
-	 *
-	 * <ul>
-	 * <li><b>in/within:</b> attribute should/shouldn't be a value within an array</li>
-	 * <li><b>message:</b> custome error message</li>
-	 * <li><b>allow_blank:</b> allow blank strings</li>
-	 * <li><b>allow_null:</b> allow null strings</li>
-	 * </ul>
-	 *
-	 * @see validates_inclusion_of
-	 * @see validates_exclusion_of
-	 * @param string $type Either inclusion or exclusion
-	 * @param $attrs Validation definition
-	 */
-	public function validates_inclusion_or_exclusion_of($type, $attrs)
-	{
-		$configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
-		    'message' => Errors::$DEFAULT_ERROR_MESSAGES[$type],
-		    'on' => 'save',
-		]);
-
-		foreach ($attrs as $attr)
-		{
-			$options = array_merge($configuration, $attr);
-			$attribute = $options[0];
-			$var = $this->model->$attribute;
-
-			if (isset($options['in']))
-				$enum = $options['in'];
-			elseif (isset($options['within']))
-				$enum = $options['within'];
-
-			if (! is_array($enum))[$enum];
-
-			$message = str_replace('%s', $var, $options['message']);
-
-			if ($this->is_null_with_option($var, $options) || $this->is_blank_with_option($var, $options))
-				continue;
-
-			if (('inclusion' == $type && ! in_array($var, $enum)) || ('exclusion' == $type && in_array($var, $enum)))
-				$this->record->add($attribute, $message);
-		}
-	}
-
-	/**
-	 * Validates that a value is numeric.
-	 *
-	 * <code>
-	 * class Person extends ActiveRecord\Model {
-	 *   static $validates_numericality_of = array(
-	 *     array('salary', 'greater_than' => 19.99, 'less_than' => 99.99)
-	 *   );
-	 * }
-	 * </code>
-	 *
-	 * Available options:
-	 *
-	 * <ul>
-	 * <li><b>only_integer:</b> value must be an integer (e.g. not a float)</li>
-	 * <li><b>even:</b> must be even</li>
-	 * <li><b>odd:</b> must be odd"</li>
-	 * <li><b>greater_than:</b> must be greater than specified number</li>
-	 * <li><b>greater_than_or_equal_to:</b> must be greater than or equal to specified number</li>
-	 * <li><b>equal_to:</b> ...</li>
-	 * <li><b>less_than:</b> ...</li>
-	 * <li><b>less_than_or_equal_to:</b> ...</li>
-	 * <li><b>allow_blank:</b> allow blank strings</li>
-	 * <li><b>allow_null:</b> allow null strings</li>
-	 * </ul>
-	 *
-	 * @param array $attrs Validation definition
-	 */
-	public function validates_numericality_of($attrs)
-	{
-		$configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
-		    'only_integer' => false,
-		]);
-
-		// Notice that for fixnum and float columns empty strings are converted to nil.
-		// Validates whether the value of the specified attribute is numeric by trying to convert it to a float with Kernel.Float
-		// (if only_integer is false) or applying it to the regular expression /\A[+\-]?\d+\Z/ (if only_integer is set to true).
-		foreach ($attrs as $attr)
-		{
-			$options = array_merge($configuration, $attr);
-			$attribute = $options[0];
-			$var = $this->model->$attribute;
-
-			$numericalityOptions = array_intersect_key(self::$ALL_NUMERICALITY_CHECKS, $options);
-
-			if ($this->is_null_with_option($var, $options))
-				continue;
-
-			$not_a_number_message = ($options['message'] ?? Errors::$DEFAULT_ERROR_MESSAGES['not_a_number']);
-
-			if (true === $options['only_integer'] && ! is_int($var))
-			{
-				if (! preg_match('/\A[+-]?\d+\Z/', (string) ($var)))
-				{
-					$this->record->add($attribute, $not_a_number_message);
-					continue;
-				}
-			}
-			else {
-				if (! is_numeric($var))
-				{
-					$this->record->add($attribute, $not_a_number_message);
-					continue;
-				}
-
-				$var = (float) $var;
-			}
-
-			foreach ($numericalityOptions as $option => $check)
-			{
-				$option_value = $options[$option];
-				$message = ($options['message'] ?? Errors::$DEFAULT_ERROR_MESSAGES[$option]);
-
-				if ('odd' != $option && 'even' != $option)
-				{
-					$option_value = (float) $options[$option];
-
-					if (! is_numeric($option_value))
-						throw new ValidationsArgumentError("$option must be a number");
-
-					$message = str_replace('%d', $option_value, $message);
-
-					if ('greater_than' == $option && ! ($var > $option_value))
-						$this->record->add($attribute, $message);
-
-					elseif ('greater_than_or_equal_to' == $option && ! ($var >= $option_value))
-						$this->record->add($attribute, $message);
-
-					elseif ('equal_to' == $option && ! ($var == $option_value))
-						$this->record->add($attribute, $message);
-
-					elseif ('less_than' == $option && ! ($var < $option_value))
-						$this->record->add($attribute, $message);
-
-					elseif ('less_than_or_equal_to' == $option && ! ($var <= $option_value))
-						$this->record->add($attribute, $message);
-				}
-				else {
-					if (('odd' == $option && ! Utils::is_odd($var)) || ('even' == $option && Utils::is_odd($var)))
-						$this->record->add($attribute, $message);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Alias of {@link validates_length_of}
-	 *
-	 * @param array $attrs Validation definition
-	 */
-	public function validates_size_of($attrs)
-	{
-		$this->validates_length_of($attrs);
-	}
-
-	/**
-	 * Validates that a value is matches a regex.
-	 *
-	 * <code>
-	 * class Person extends ActiveRecord\Model {
-	 *   static $validates_format_of = array(
-	 *     array('email', 'with' => '/^.*?@.*$/')
-	 *   );
-	 * }
-	 * </code>
-	 *
-	 * Available options:
-	 *
-	 * <ul>
-	 * <li><b>with:</b> a regular expression</li>
-	 * <li><b>message:</b> custom error message</li>
-	 * <li><b>allow_blank:</b> allow blank strings</li>
-	 * <li><b>allow_null:</b> allow null strings</li>
-	 * </ul>
-	 *
-	 * @param array $attrs Validation definition
-	 */
-	public function validates_format_of($attrs)
-	{
-		$configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
-		    'message' => Errors::$DEFAULT_ERROR_MESSAGES['invalid'],
-		    'on' => 'save',
-		    'with' => null,
-		]);
-
-		foreach ($attrs as $attr)
-		{
-			$options = array_merge($configuration, $attr);
-			$attribute = $options[0];
-			$var = $this->model->$attribute;
-
-			if (is_null($options['with']) || ! is_string($options['with']) || ! is_string($options['with']))
-				throw new ValidationsArgumentError('A regular expression must be supplied as the [with] option of the configuration array.');
-			else $expression = $options['with'];
-
-			if ($this->is_null_with_option($var, $options) || $this->is_blank_with_option($var, $options))
-				continue;
-
-			if (! @preg_match($expression, $var))
-			$this->record->add($attribute, $options['message']);
-		}
-	}
-
-	/**
-	 * Validates the length of a value.
-	 *
-	 * <code>
-	 * class Person extends ActiveRecord\Model {
-	 *   static $validates_length_of = array(
-	 *     array('name', 'within' => array(1,50))
-	 *   );
-	 * }
-	 * </code>
-	 *
-	 * Available options:
-	 *
-	 * <ul>
-	 * <li><b>is:</b> attribute should be exactly n characters long</li>
-	 * <li><b>in/within:</b> attribute should be within an range array(min,max)</li>
-	 * <li><b>maximum/minimum:</b> attribute should not be above/below respectively</li>
-	 * <li><b>message:</b> custome error message</li>
-	 * <li><b>allow_blank:</b> allow blank strings</li>
-	 * <li><b>allow_null:</b> allow null strings. (Even if this is set to false, a null string is always shorter than a maximum value.)</li>
-	 * </ul>
-	 *
-	 * @param array $attrs Validation definition
-	 */
-	public function validates_length_of($attrs)
-	{
-		$configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
-		    'too_long' => Errors::$DEFAULT_ERROR_MESSAGES['too_long'],
-		    'too_short' => Errors::$DEFAULT_ERROR_MESSAGES['too_short'],
-		    'wrong_length' => Errors::$DEFAULT_ERROR_MESSAGES['wrong_length'],
-		]);
-
-		foreach ($attrs as $attr)
-		{
-			$options = array_merge($configuration, $attr);
-			$range_options = array_intersect(array_keys(self::$ALL_RANGE_OPTIONS), array_keys($attr));
-			sort($range_options);
-
-			switch (count($range_options))
-			{
-				case 0:
-					throw new ValidationsArgumentError('Range unspecified.  Specify the [within], [maximum], or [is] option.');
-				case 1:
-					break;
-
-				default:
-					throw new ValidationsArgumentError('Too many range options specified.  Choose only one.');
-			}
-
-			$attribute = $options[0];
-			$var = $this->model->$attribute;
-			if ($this->is_null_with_option($var, $options) || $this->is_blank_with_option($var, $options))
-				continue;
-			if ($range_options[0] == 'within' || $range_options[0] == 'in')
-			{
-				$range = $options[$range_options[0]];
-
-				if (! (Utils::is_a('range', $range)))
-					throw new ValidationsArgumentError("$range_options[0] must be an array composing a range of numbers with key [0] being less than key [1]");
-				$range_options = ['minimum', 'maximum'];
-				$attr['minimum'] = $range[0];
-				$attr['maximum'] = $range[1];
-			}
-			foreach ($range_options as $range_option)
-			{
-				$option = $attr[$range_option];
-
-				if ((int) $option <= 0)
-					throw new ValidationsArgumentError("$range_option value cannot use a signed integer.");
-
-				if (is_float($option))
-					throw new ValidationsArgumentError("$range_option value cannot use a float for length.");
-
-				if (! ($range_option == 'maximum' && is_null($this->model->$attribute)))
-				{
-					$messageOptions = [
-					    'is' => 'wrong_length',
-					    'minimum' => 'too_short',
-					    'maximum' => 'too_long',
-					];
-
-					if (isset($options['message']))
-						$message = $options['message'];
-					else $message = $options[$messageOptions[$range_option]];
-
-					$message = str_replace('%d', $option, $message);
-					$attribute_value = $this->model->$attribute;
-					$len = strlen($attribute_value);
-					$value = (int) $attr[$range_option];
-
-					if ('maximum' == $range_option && $len > $value)
-						$this->record->add($attribute, $message);
-
-					if ('minimum' == $range_option && $len < $value)
-						$this->record->add($attribute, $message);
-
-					if ('is' == $range_option && $len !== $value)
-						$this->record->add($attribute, $message);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Validates the uniqueness of a value.
-	 *
-	 * <code>
-	 * class Person extends ActiveRecord\Model {
-	 *   static $validates_uniqueness_of = array(
-	 *     array('name'),
-	 *     array(array('blah','bleh'), 'message' => 'blech')
-	 *   );
-	 * }
-	 * </code>
-	 *
-	 * Available options:
-	 *
-	 * <ul>
-	 * <li><b>with:</b> a regular expression</li>
-	 * <li><b>message:</b> custom error message</li>
-	 * <li><b>allow_blank:</b> allow blank strings</li>
-	 * <li><b>allow_null:</b> allow null strings</li>
-	 * </ul>
-	 *
-	 * @param array $attrs Validation definition
-	 */
-	public function validates_uniqueness_of($attrs)
-	{
-		$configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
-		    'message' => Errors::$DEFAULT_ERROR_MESSAGES['unique'],
-		]);
-		// Retrieve connection from model for quote_name method
-		$connection = $this->klass->getMethod('connection')->invoke(null);
-
-		foreach ($attrs as $attr)
-		{
-			$options = array_merge($configuration, is_array($attr) ? $attr : [$attr]);
-			$pk = $this->model->get_primary_key();
-			$pk_value = $this->model->{$pk[0]};
-
-			if (is_array($options[0]))
-			{
-				$add_record = implode("_and_", $options[0]);
-				$fields = $options[0];
-			}
-			else {
-				$add_record = $options[0];
-				$fields = [$options[0]];
-			}
-
-			$sql = "";
-			$conditions = [""];
-			$pk_quoted = $connection->quote_name($pk[0]);
-			if ($pk_value === null)
-				$sql = "{$pk_quoted} IS NOT NULL";
-			else {
-				$sql = "{$pk_quoted} != ?";
-				array_push($conditions, $pk_value);
-			}
-
-			foreach ($fields as $field)
-			{
-				$field = $this->model->get_real_attribute_name($field);
-				$quoted_field = $connection->quote_name($field);
-				$sql .= " AND {$quoted_field}=?";
-				array_push($conditions, $this->model->$field);
-			}
-
-			$conditions[0] = $sql;
-
-			if ($this->model->exists([
-			    'conditions' => $conditions,
-			]))
-				$this->record->add($add_record, $options['message']);
-		}
-	}
-
-	private function is_null_with_option($var, &$options)
-	{
-		return (is_null($var) && (isset($options['allow_null']) && $options['allow_null']));
-	}
-
-	private function is_blank_with_option($var, &$options)
-	{
-		return (Utils::is_blank($var) && (isset($options['allow_blank']) && $options['allow_blank']));
-	}
+    private $klass;
+
+    private static $VALIDATION_FUNCTIONS = [
+        'validates_presence_of',
+        'validates_size_of',
+        'validates_length_of',
+        'validates_inclusion_of',
+        'validates_exclusion_of',
+        'validates_format_of',
+        'validates_numericality_of',
+        'validates_uniqueness_of',
+    ];
+
+    private static $DEFAULT_VALIDATION_OPTIONS = [
+        'on' => 'save',
+        'allow_null' => false,
+        'allow_blank' => false,
+        'message' => null,
+    ];
+
+    private static $ALL_RANGE_OPTIONS = [
+        'is' => null,
+        'within' => null,
+        'in' => null,
+        'minimum' => null,
+        'maximum' => null,
+    ];
+
+    private static $ALL_NUMERICALITY_CHECKS = [
+        'greater_than' => null,
+        'greater_than_or_equal_to' => null,
+        'equal_to' => null,
+        'less_than' => null,
+        'less_than_or_equal_to' => null,
+        'odd' => null,
+        'even' => null,
+    ];
+
+    /**
+     * Constructs a {@link Validations} object.
+     *
+     * @param  Model  $model  The model to validate
+     * @return Validations
+     */
+    public function __construct(
+        private readonly Model $model
+    ) {
+        $this->record = new Errors($this->model);
+        $this->klass = Reflections::instance()->get($this->model::class);
+        $this->validators = array_intersect(array_keys($this->klass->getStaticProperties()), self::$VALIDATION_FUNCTIONS);
+    }
+
+    public function get_record()
+    {
+        return $this->record;
+    }
+
+    /**
+     * Returns validator data.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        $data = [];
+        foreach ($this->validators as $validate) {
+            $attrs = $this->klass->getStaticPropertyValue($validate);
+
+            foreach (wrap_strings_in_arrays($attrs) as $attr) {
+                $field = $attr[0];
+
+                if (! isset($data[$field]) || ! is_array($data[$field])) {
+                    $data[$field] = [];
+                }
+
+                $attr['validator'] = $validate;
+                unset($attr[0]);
+                array_push($data[$field], $attr);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Runs the validators.
+     *
+     * @return Errors the validation errors if any
+     */
+    public function validate()
+    {
+        foreach ($this->validators as $validate) {
+            $definition = $this->klass->getStaticPropertyValue($validate);
+            $this->{$validate}($definition);
+        }
+
+        $model_reflection = Reflections::instance()->get($this->model);
+
+        if ($model_reflection->hasMethod('validate') && $model_reflection->getMethod('validate')->isPublic()) {
+            $this->model->validate();
+        }
+
+        $this->record->clear_model();
+
+        return $this->record;
+    }
+
+    /**
+     * Validates a field is not null and not blank.
+     *
+     * <code>
+     * class Person extends ActiveRecord\Model {
+     *   static $validates_presence_of = array(
+     *     array('first_name'),
+     *     array('last_name')
+     *   );
+     * }
+     * </code>
+     *
+     * Available options:
+     *
+     * <ul>
+     * <li><b>message:</b> custom error message</li>
+     * <li><b>allow_blank:</b> allow blank strings</li>
+     * <li><b>allow_null:</b> allow null strings</li>
+     * </ul>
+     *
+     * @param  array  $attrs  Validation definition
+     */
+    public function validates_presence_of($attrs)
+    {
+        $configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
+            'message' => Errors::$DEFAULT_ERROR_MESSAGES['blank'],
+            'on' => 'save',
+        ]);
+
+        foreach ($attrs as $attr) {
+            $options = array_merge($configuration, is_array($attr) ? $attr : [$attr]);
+            $this->record->add_on_blank($options[0], $options['message']);
+        }
+    }
+
+    /**
+     * Validates that a value is included the specified array.
+     *
+     * <code>
+     * class Car extends ActiveRecord\Model {
+     *   static $validates_inclusion_of = array(
+     *     array('fuel_type', 'in' => array('hyrdogen', 'petroleum', 'electric')),
+     *   );
+     * }
+     * </code>
+     *
+     * Available options:
+     *
+     * <ul>
+     * <li><b>in/within:</b> attribute should/shouldn't be a value within an array</li>
+     * <li><b>message:</b> custome error message</li>
+     * <li><b>allow_blank:</b> allow blank strings</li>
+     * <li><b>allow_null:</b> allow null strings</li>
+     * </ul>
+     *
+     * @param  array  $attrs  Validation definition
+     */
+    public function validates_inclusion_of($attrs)
+    {
+        $this->validates_inclusion_or_exclusion_of('inclusion', $attrs);
+    }
+
+    /**
+     * This is the opposite of {@link validates_include_of}.
+     *
+     * Available options:
+     *
+     * <ul>
+     * <li><b>in/within:</b> attribute should/shouldn't be a value within an array</li>
+     * <li><b>message:</b> custome error message</li>
+     * <li><b>allow_blank:</b> allow blank strings</li>
+     * <li><b>allow_null:</b> allow null strings</li>
+     * </ul>
+     *
+     * @param  array  $attrs  Validation definition
+     *
+     * @see validates_inclusion_of
+     */
+    public function validates_exclusion_of($attrs)
+    {
+        $this->validates_inclusion_or_exclusion_of('exclusion', $attrs);
+    }
+
+    /**
+     * Validates that a value is in or out of a specified list of values.
+     *
+     * Available options:
+     *
+     * <ul>
+     * <li><b>in/within:</b> attribute should/shouldn't be a value within an array</li>
+     * <li><b>message:</b> custome error message</li>
+     * <li><b>allow_blank:</b> allow blank strings</li>
+     * <li><b>allow_null:</b> allow null strings</li>
+     * </ul>
+     *
+     * @see validates_inclusion_of
+     * @see validates_exclusion_of
+     *
+     * @param  string  $type  Either inclusion or exclusion
+     * @param  $attrs  Validation definition
+     */
+    public function validates_inclusion_or_exclusion_of($type, $attrs)
+    {
+        $configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
+            'message' => Errors::$DEFAULT_ERROR_MESSAGES[$type],
+            'on' => 'save',
+        ]);
+
+        foreach ($attrs as $attr) {
+            $options = array_merge($configuration, $attr);
+            $attribute = $options[0];
+            $var = $this->model->{$attribute};
+
+            if (isset($options['in'])) {
+                $enum = $options['in'];
+            } elseif (isset($options['within'])) {
+                $enum = $options['within'];
+            }
+
+            if (! is_array($enum)) {
+                [$enum];
+            }
+
+            $message = str_replace('%s', $var, $options['message']);
+
+            if ($this->is_null_with_option($var, $options) || $this->is_blank_with_option($var, $options)) {
+                continue;
+            }
+
+            if (($type == 'inclusion' && ! in_array($var, $enum)) || ($type == 'exclusion' && in_array($var, $enum))) {
+                $this->record->add($attribute, $message);
+            }
+        }
+    }
+
+    /**
+     * Validates that a value is numeric.
+     *
+     * <code>
+     * class Person extends ActiveRecord\Model {
+     *   static $validates_numericality_of = array(
+     *     array('salary', 'greater_than' => 19.99, 'less_than' => 99.99)
+     *   );
+     * }
+     * </code>
+     *
+     * Available options:
+     *
+     * <ul>
+     * <li><b>only_integer:</b> value must be an integer (e.g. not a float)</li>
+     * <li><b>even:</b> must be even</li>
+     * <li><b>odd:</b> must be odd"</li>
+     * <li><b>greater_than:</b> must be greater than specified number</li>
+     * <li><b>greater_than_or_equal_to:</b> must be greater than or equal to specified number</li>
+     * <li><b>equal_to:</b> ...</li>
+     * <li><b>less_than:</b> ...</li>
+     * <li><b>less_than_or_equal_to:</b> ...</li>
+     * <li><b>allow_blank:</b> allow blank strings</li>
+     * <li><b>allow_null:</b> allow null strings</li>
+     * </ul>
+     *
+     * @param  array  $attrs  Validation definition
+     */
+    public function validates_numericality_of($attrs)
+    {
+        $configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
+            'only_integer' => false,
+        ]);
+
+        // Notice that for fixnum and float columns empty strings are converted to nil.
+        // Validates whether the value of the specified attribute is numeric by trying to convert it to a float with Kernel.Float
+        // (if only_integer is false) or applying it to the regular expression /\A[+\-]?\d+\Z/ (if only_integer is set to true).
+        foreach ($attrs as $attr) {
+            $options = array_merge($configuration, $attr);
+            $attribute = $options[0];
+            $var = $this->model->{$attribute};
+
+            $numericalityOptions = array_intersect_key(self::$ALL_NUMERICALITY_CHECKS, $options);
+
+            if ($this->is_null_with_option($var, $options)) {
+                continue;
+            }
+
+            $not_a_number_message = ($options['message'] ?? Errors::$DEFAULT_ERROR_MESSAGES['not_a_number']);
+
+            if ($options['only_integer'] === true && ! is_int($var)) {
+                if (! preg_match('/\A[+-]?\d+\Z/', (string) ($var))) {
+                    $this->record->add($attribute, $not_a_number_message);
+
+                    continue;
+                }
+            } else {
+                if (! is_numeric($var)) {
+                    $this->record->add($attribute, $not_a_number_message);
+
+                    continue;
+                }
+
+                $var = (float) $var;
+            }
+
+            foreach ($numericalityOptions as $option => $check) {
+                $option_value = $options[$option];
+                $message = ($options['message'] ?? Errors::$DEFAULT_ERROR_MESSAGES[$option]);
+
+                if ($option != 'odd' && $option != 'even') {
+                    $option_value = (float) $options[$option];
+
+                    if (! is_numeric($option_value)) {
+                        throw new ValidationsArgumentError("{$option} must be a number");
+                    }
+
+                    $message = str_replace('%d', $option_value, $message);
+
+                    if ($option == 'greater_than' && ! ($var > $option_value)) {
+                        $this->record->add($attribute, $message);
+                    } elseif ($option == 'greater_than_or_equal_to' && ! ($var >= $option_value)) {
+                        $this->record->add($attribute, $message);
+                    } elseif ($option == 'equal_to' && ! ($var == $option_value)) {
+                        $this->record->add($attribute, $message);
+                    } elseif ($option == 'less_than' && ! ($var < $option_value)) {
+                        $this->record->add($attribute, $message);
+                    } elseif ($option == 'less_than_or_equal_to' && ! ($var <= $option_value)) {
+                        $this->record->add($attribute, $message);
+                    }
+                } else {
+                    if (($option == 'odd' && ! Utils::is_odd($var)) || ($option == 'even' && Utils::is_odd($var))) {
+                        $this->record->add($attribute, $message);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Alias of {@link validates_length_of}
+     *
+     * @param  array  $attrs  Validation definition
+     */
+    public function validates_size_of($attrs)
+    {
+        $this->validates_length_of($attrs);
+    }
+
+    /**
+     * Validates that a value is matches a regex.
+     *
+     * <code>
+     * class Person extends ActiveRecord\Model {
+     *   static $validates_format_of = array(
+     *     array('email', 'with' => '/^.*?@.*$/')
+     *   );
+     * }
+     * </code>
+     *
+     * Available options:
+     *
+     * <ul>
+     * <li><b>with:</b> a regular expression</li>
+     * <li><b>message:</b> custom error message</li>
+     * <li><b>allow_blank:</b> allow blank strings</li>
+     * <li><b>allow_null:</b> allow null strings</li>
+     * </ul>
+     *
+     * @param  array  $attrs  Validation definition
+     */
+    public function validates_format_of($attrs)
+    {
+        $configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
+            'message' => Errors::$DEFAULT_ERROR_MESSAGES['invalid'],
+            'on' => 'save',
+            'with' => null,
+        ]);
+
+        foreach ($attrs as $attr) {
+            $options = array_merge($configuration, $attr);
+            $attribute = $options[0];
+            $var = $this->model->{$attribute};
+
+            if ($options['with'] === null || ! is_string($options['with']) || ! is_string($options['with'])) {
+                throw new ValidationsArgumentError('A regular expression must be supplied as the [with] option of the configuration array.');
+            } else {
+                $expression = $options['with'];
+            }
+
+            if ($this->is_null_with_option($var, $options) || $this->is_blank_with_option($var, $options)) {
+                continue;
+            }
+
+            if (! @preg_match($expression, $var)) {
+                $this->record->add($attribute, $options['message']);
+            }
+        }
+    }
+
+    /**
+     * Validates the length of a value.
+     *
+     * <code>
+     * class Person extends ActiveRecord\Model {
+     *   static $validates_length_of = array(
+     *     array('name', 'within' => array(1,50))
+     *   );
+     * }
+     * </code>
+     *
+     * Available options:
+     *
+     * <ul>
+     * <li><b>is:</b> attribute should be exactly n characters long</li>
+     * <li><b>in/within:</b> attribute should be within an range array(min,max)</li>
+     * <li><b>maximum/minimum:</b> attribute should not be above/below respectively</li>
+     * <li><b>message:</b> custome error message</li>
+     * <li><b>allow_blank:</b> allow blank strings</li>
+     * <li><b>allow_null:</b> allow null strings. (Even if this is set to false, a null string is always shorter than a maximum value.)</li>
+     * </ul>
+     *
+     * @param  array  $attrs  Validation definition
+     */
+    public function validates_length_of($attrs)
+    {
+        $configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
+            'too_long' => Errors::$DEFAULT_ERROR_MESSAGES['too_long'],
+            'too_short' => Errors::$DEFAULT_ERROR_MESSAGES['too_short'],
+            'wrong_length' => Errors::$DEFAULT_ERROR_MESSAGES['wrong_length'],
+        ]);
+
+        foreach ($attrs as $attr) {
+            $options = array_merge($configuration, $attr);
+            $range_options = array_intersect(array_keys(self::$ALL_RANGE_OPTIONS), array_keys($attr));
+            sort($range_options);
+
+            switch (count($range_options)) {
+                case 0:
+                    throw new ValidationsArgumentError('Range unspecified.  Specify the [within], [maximum], or [is] option.');
+                case 1:
+                    break;
+
+                default:
+                    throw new ValidationsArgumentError('Too many range options specified.  Choose only one.');
+            }
+
+            $attribute = $options[0];
+            $var = $this->model->{$attribute};
+            if ($this->is_null_with_option($var, $options) || $this->is_blank_with_option($var, $options)) {
+                continue;
+            }
+            if ($range_options[0] == 'within' || $range_options[0] == 'in') {
+                $range = $options[$range_options[0]];
+
+                if (! (Utils::is_a('range', $range))) {
+                    throw new ValidationsArgumentError("{$range_options[0]} must be an array composing a range of numbers with key [0] being less than key [1]");
+                }
+                $range_options = ['minimum', 'maximum'];
+                $attr['minimum'] = $range[0];
+                $attr['maximum'] = $range[1];
+            }
+            foreach ($range_options as $range_option) {
+                $option = $attr[$range_option];
+
+                if ((int) $option <= 0) {
+                    throw new ValidationsArgumentError("{$range_option} value cannot use a signed integer.");
+                }
+
+                if (is_float($option)) {
+                    throw new ValidationsArgumentError("{$range_option} value cannot use a float for length.");
+                }
+
+                if (! ($range_option == 'maximum' && $this->model->{$attribute} === null)) {
+                    $messageOptions = [
+                        'is' => 'wrong_length',
+                        'minimum' => 'too_short',
+                        'maximum' => 'too_long',
+                    ];
+
+                    if (isset($options['message'])) {
+                        $message = $options['message'];
+                    } else {
+                        $message = $options[$messageOptions[$range_option]];
+                    }
+
+                    $message = str_replace('%d', $option, $message);
+                    $attribute_value = $this->model->{$attribute};
+                    $len = strlen($attribute_value);
+                    $value = (int) $attr[$range_option];
+
+                    if ($range_option == 'maximum' && $len > $value) {
+                        $this->record->add($attribute, $message);
+                    }
+
+                    if ($range_option == 'minimum' && $len < $value) {
+                        $this->record->add($attribute, $message);
+                    }
+
+                    if ($range_option == 'is' && $len !== $value) {
+                        $this->record->add($attribute, $message);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates the uniqueness of a value.
+     *
+     * <code>
+     * class Person extends ActiveRecord\Model {
+     *   static $validates_uniqueness_of = array(
+     *     array('name'),
+     *     array(array('blah','bleh'), 'message' => 'blech')
+     *   );
+     * }
+     * </code>
+     *
+     * Available options:
+     *
+     * <ul>
+     * <li><b>with:</b> a regular expression</li>
+     * <li><b>message:</b> custom error message</li>
+     * <li><b>allow_blank:</b> allow blank strings</li>
+     * <li><b>allow_null:</b> allow null strings</li>
+     * </ul>
+     *
+     * @param  array  $attrs  Validation definition
+     */
+    public function validates_uniqueness_of($attrs)
+    {
+        $configuration = array_merge(self::$DEFAULT_VALIDATION_OPTIONS, [
+            'message' => Errors::$DEFAULT_ERROR_MESSAGES['unique'],
+        ]);
+        // Retrieve connection from model for quote_name method
+        $connection = $this->klass->getMethod('connection')->invoke(null);
+
+        foreach ($attrs as $attr) {
+            $options = array_merge($configuration, is_array($attr) ? $attr : [$attr]);
+            $pk = $this->model->get_primary_key();
+            $pk_value = $this->model->{$pk[0]};
+
+            if (is_array($options[0])) {
+                $add_record = implode('_and_', $options[0]);
+                $fields = $options[0];
+            } else {
+                $add_record = $options[0];
+                $fields = [$options[0]];
+            }
+
+            $sql = '';
+            $conditions = [''];
+            $pk_quoted = $connection->quote_name($pk[0]);
+            if ($pk_value === null) {
+                $sql = "{$pk_quoted} IS NOT NULL";
+            } else {
+                $sql = "{$pk_quoted} != ?";
+                array_push($conditions, $pk_value);
+            }
+
+            foreach ($fields as $field) {
+                $field = $this->model->get_real_attribute_name($field);
+                $quoted_field = $connection->quote_name($field);
+                $sql .= " AND {$quoted_field}=?";
+                array_push($conditions, $this->model->{$field});
+            }
+
+            $conditions[0] = $sql;
+
+            if ($this->model->exists([
+                'conditions' => $conditions,
+            ])) {
+                $this->record->add($add_record, $options['message']);
+            }
+        }
+    }
+
+    private function is_null_with_option($var, &$options)
+    {
+        return $var === null && (isset($options['allow_null']) && $options['allow_null']);
+    }
+
+    private function is_blank_with_option($var, &$options)
+    {
+        return Utils::is_blank($var) && (isset($options['allow_blank']) && $options['allow_blank']);
+    }
 }
 
 /**
  * Class that holds {@link Validations} errors.
  */
-class Errors implements IteratorAggregate, \Stringable
+class Errors implements \Stringable, IteratorAggregate
 {
-	private $model;
+    private $model;
 
-	private $errors;
+    private $errors;
 
-	public static $DEFAULT_ERROR_MESSAGES = [
-	    'inclusion' => "is not included in the list",
-	    'exclusion' => "is reserved",
-	    'invalid' => "is invalid",
-	    'confirmation' => "doesn't match confirmation",
-	    'accepted' => "must be accepted",
-	    'empty' => "can't be empty",
-	    'blank' => "can't be blank",
-	    'too_long' => "is too long (maximum is %d characters)",
-	    'too_short' => "is too short (minimum is %d characters)",
-	    'wrong_length' => "is the wrong length (should be %d characters)",
-	    'taken' => "has already been taken",
-	    'not_a_number' => "is not a number",
-	    'greater_than' => "must be greater than %d",
-	    'equal_to' => "must be equal to %d",
-	    'less_than' => "must be less than %d",
-	    'odd' => "must be odd",
-	    'even' => "must be even",
-	    'unique' => "must be unique",
-	    'less_than_or_equal_to' => "must be less than or equal to %d",
-	    'greater_than_or_equal_to' => "must be greater than or equal to %d",
-	];
+    public static $DEFAULT_ERROR_MESSAGES = [
+        'inclusion' => 'is not included in the list',
+        'exclusion' => 'is reserved',
+        'invalid' => 'is invalid',
+        'confirmation' => "doesn't match confirmation",
+        'accepted' => 'must be accepted',
+        'empty' => "can't be empty",
+        'blank' => "can't be blank",
+        'too_long' => 'is too long (maximum is %d characters)',
+        'too_short' => 'is too short (minimum is %d characters)',
+        'wrong_length' => 'is the wrong length (should be %d characters)',
+        'taken' => 'has already been taken',
+        'not_a_number' => 'is not a number',
+        'greater_than' => 'must be greater than %d',
+        'equal_to' => 'must be equal to %d',
+        'less_than' => 'must be less than %d',
+        'odd' => 'must be odd',
+        'even' => 'must be even',
+        'unique' => 'must be unique',
+        'less_than_or_equal_to' => 'must be less than or equal to %d',
+        'greater_than_or_equal_to' => 'must be greater than or equal to %d',
+    ];
 
-	/**
-	 * Constructs an {@link Errors} object.
-	 *
-	 * @param Model $model The model the error is for
-	 * @return Errors
-	 */
-	public function __construct(
-	    Model $model
-	)
-	{
-		$this->model = $model;
-	}
+    /**
+     * Constructs an {@link Errors} object.
+     *
+     * @param  Model  $model  The model the error is for
+     * @return Errors
+     */
+    public function __construct(
+        Model $model
+    ) {
+        $this->model = $model;
+    }
 
-	/**
-	 * Nulls $model so we don't get pesky circular references. $model is only needed during the
-	 * validation process and so can be safely cleared once that is done.
-	 */
-	public function clear_model()
-	{
-		$this->model = null;
-	}
+    /**
+     * Nulls $model so we don't get pesky circular references. $model is only needed during the
+     * validation process and so can be safely cleared once that is done.
+     */
+    public function clear_model()
+    {
+        $this->model = null;
+    }
 
-	/**
-	 * Add an error message.
-	 *
-	 * @param string $attribute Name of an attribute on the model
-	 * @param string $msg The error message
-	 */
-	public function add($attribute, $msg)
-	{
-		$msg ??= self :: $DEFAULT_ERROR_MESSAGES['invalid'];
+    /**
+     * Add an error message.
+     *
+     * @param  string  $attribute  Name of an attribute on the model
+     * @param  string  $msg  The error message
+     */
+    public function add($attribute, $msg)
+    {
+        $msg ??= self::$DEFAULT_ERROR_MESSAGES['invalid'];
 
-		if (! isset($this->errors[$attribute]))
-			$this->errors[$attribute] = [$msg];
-		else $this->errors[$attribute][] = $msg;
-	}
+        if (! isset($this->errors[$attribute])) {
+            $this->errors[$attribute] = [$msg];
+        } else {
+            $this->errors[$attribute][] = $msg;
+        }
+    }
 
-	/**
-	 * Adds an error message only if the attribute value is {@link http://www.php.net/empty empty}.
-	 *
-	 * @param string $attribute Name of an attribute on the model
-	 * @param string $msg The error message
-	 */
-	public function add_on_empty($attribute, $msg)
-	{
-		if (empty($msg))
-			$msg = self::$DEFAULT_ERROR_MESSAGES['empty'];
+    /**
+     * Adds an error message only if the attribute value is {@link http://www.php.net/empty empty}.
+     *
+     * @param  string  $attribute  Name of an attribute on the model
+     * @param  string  $msg  The error message
+     */
+    public function add_on_empty($attribute, $msg)
+    {
+        if (empty($msg)) {
+            $msg = self::$DEFAULT_ERROR_MESSAGES['empty'];
+        }
 
-		if (empty($this->model->$attribute))
-			$this->add($attribute, $msg);
-	}
+        if (empty($this->model->{$attribute})) {
+            $this->add($attribute, $msg);
+        }
+    }
 
-	/**
-	 * Retrieve error messages for an attribute.
-	 *
-	 * @param string $attribute Name of an attribute on the model
-	 * @return array or null if there is no error.
-	 */
-	public function __get($attribute)
-	{
-		if (! isset($this->errors[$attribute]))
-			return null;
+    /**
+     * Retrieve error messages for an attribute.
+     *
+     * @param  string  $attribute  Name of an attribute on the model
+     * @return array or null if there is no error.
+     */
+    public function __get($attribute)
+    {
+        if (! isset($this->errors[$attribute])) {
+            return null;
+        }
 
-		return $this->errors[$attribute];
-	}
+        return $this->errors[$attribute];
+    }
 
-	/**
-	 * Adds the error message only if the attribute value was null or an empty string.
-	 *
-	 * @param string $attribute Name of an attribute on the model
-	 * @param string $msg The error message
-	 */
-	public function add_on_blank($attribute, $msg)
-	{
-		if (! $msg)
-			$msg = self::$DEFAULT_ERROR_MESSAGES['blank'];
+    /**
+     * Adds the error message only if the attribute value was null or an empty string.
+     *
+     * @param  string  $attribute  Name of an attribute on the model
+     * @param  string  $msg  The error message
+     */
+    public function add_on_blank($attribute, $msg)
+    {
+        if (! $msg) {
+            $msg = self::$DEFAULT_ERROR_MESSAGES['blank'];
+        }
 
-		if (($value = $this->model->$attribute) === '' || $value === null)
-			$this->add($attribute, $msg);
-	}
+        if (($value = $this->model->{$attribute}) === '' || $value === null) {
+            $this->add($attribute, $msg);
+        }
+    }
 
-	/**
-	 * Returns true if the specified attribute had any error messages.
-	 *
-	 * @param string $attribute Name of an attribute on the model
-	 * @return bool
-	 */
-	public function is_invalid($attribute)
-	{
-		return isset($this->errors[$attribute]);
-	}
+    /**
+     * Returns true if the specified attribute had any error messages.
+     *
+     * @param  string  $attribute  Name of an attribute on the model
+     * @return bool
+     */
+    public function is_invalid($attribute)
+    {
+        return isset($this->errors[$attribute]);
+    }
 
-	/**
-	 * Returns the error message(s) for the specified attribute or null if none.
-	 *
-	 * @param string $attribute Name of an attribute on the model
-	 * @return string/array	Array of strings if several error occured on this attribute.
-	 */
-	public function on($attribute)
-	{
-		$errors = $this->$attribute;
+    /**
+     * Returns the error message(s) for the specified attribute or null if none.
+     *
+     * @param  string  $attribute  Name of an attribute on the model
+     * @return string/array Array of strings if several error occured on this attribute.
+     */
+    public function on($attribute)
+    {
+        $errors = $this->{$attribute};
 
-		return $errors && count($errors) == 1 ? $errors[0] : $errors;
-	}
+        return $errors && count($errors) == 1 ? $errors[0] : $errors;
+    }
 
-	/**
-	 * Returns the internal errors object.
-	 *
-	 * <code>
-	 * $model->errors->get_raw_errors();
-	 *
-	 * # array(
-	 * #  "name" => array("can't be blank"),
-	 * #  "state" => array("is the wrong length (should be 2 chars)",
-	 * # )
-	 * </code>
-	 */
-	public function get_raw_errors()
-	{
-		return $this->errors;
-	}
+    /**
+     * Returns the internal errors object.
+     *
+     * <code>
+     * $model->errors->get_raw_errors();
+     *
+     * # array(
+     * #  "name" => array("can't be blank"),
+     * #  "state" => array("is the wrong length (should be 2 chars)",
+     * # )
+     * </code>
+     */
+    public function get_raw_errors()
+    {
+        return $this->errors;
+    }
 
-	/**
-	 * Returns all the error messages as an array.
-	 *
-	 * <code>
-	 * $model->errors->full_messages();
-	 *
-	 * # array(
-	 * #  "Name can't be blank",
-	 * #  "State is the wrong length (should be 2 chars)"
-	 * # )
-	 * </code>
-	 *
-	 * @return array
-	 */
-	public function full_messages()
-	{
-		$full_messages = [];
+    /**
+     * Returns all the error messages as an array.
+     *
+     * <code>
+     * $model->errors->full_messages();
+     *
+     * # array(
+     * #  "Name can't be blank",
+     * #  "State is the wrong length (should be 2 chars)"
+     * # )
+     * </code>
+     *
+     * @return array
+     */
+    public function full_messages()
+    {
+        $full_messages = [];
 
-		$this->to_array(function ($attribute, $message) use (&$full_messages): void {
-			$full_messages[] = $message;
-		});
+        $this->to_array(function ($attribute, $message) use (&$full_messages): void {
+            $full_messages[] = $message;
+        });
 
-		return $full_messages;
-	}
+        return $full_messages;
+    }
 
-	/**
-	 * Returns all the error messages as an array, including error key.
-	 *
-	 * <code>
-	 * $model->errors->errors();
-	 *
-	 * # array(
-	 * #  "name" => array("Name can't be blank"),
-	 * #  "state" => array("State is the wrong length (should be 2 chars)")
-	 * # )
-	 * </code>
-	 *
-	 * @param callable $closure Closure to fetch the errors in some other format (optional)
-	 *                       This closure has the signature function($attribute, $message)
-	 *                       and is called for each available error message.
-	 * @return array
-	 */
-	public function to_array($closure = null)
-	{
-		$errors = [];
+    /**
+     * Returns all the error messages as an array, including error key.
+     *
+     * <code>
+     * $model->errors->errors();
+     *
+     * # array(
+     * #  "name" => array("Name can't be blank"),
+     * #  "state" => array("State is the wrong length (should be 2 chars)")
+     * # )
+     * </code>
+     *
+     * @param  callable  $closure  Closure to fetch the errors in some other format (optional)
+     *                             This closure has the signature function($attribute, $message)
+     *                             and is called for each available error message.
+     * @return array
+     */
+    public function to_array($closure = null)
+    {
+        $errors = [];
 
-		if ($this->errors)
-		{
-			foreach ($this->errors as $attribute => $messages)
-			{
-				foreach ($messages as $msg)
-				{
-					if (is_null($msg))
-						continue;
+        if ($this->errors) {
+            foreach ($this->errors as $attribute => $messages) {
+                foreach ($messages as $msg) {
+                    if ($msg === null) {
+                        continue;
+                    }
 
-					$errors[$attribute][] = ($message = Utils::human_attribute($attribute) . ' ' . $msg);
+                    $errors[$attribute][] = ($message = Utils::human_attribute($attribute).' '.$msg);
 
-					if ($closure)
-						$closure($attribute, $message);
-				}
-			}
-		}
-		return $errors;
-	}
+                    if ($closure) {
+                        $closure($attribute, $message);
+                    }
+                }
+            }
+        }
 
-	/**
-	 * Convert all error messages to a String.
-	 * This function is called implicitely if the object is casted to a string:
-	 *
-	 * <code>
-	 * echo $error;
-	 *
-	 * # "Name can't be blank\nState is the wrong length (should be 2 chars)"
-	 * </code>
-	 */
-	public function __toString(): string
-	{
-		return implode("\n", $this->full_messages());
-	}
+        return $errors;
+    }
 
-	/**
-	 * Returns true if there are no error messages.
-	 * @return bool
-	 */
-	public function is_empty()
-	{
-		return empty($this->errors);
-	}
+    /**
+     * Convert all error messages to a String.
+     * This function is called implicitely if the object is casted to a string:
+     *
+     * <code>
+     * echo $error;
+     *
+     * # "Name can't be blank\nState is the wrong length (should be 2 chars)"
+     * </code>
+     */
+    public function __toString(): string
+    {
+        return implode("\n", $this->full_messages());
+    }
 
-	/**
-	 * Clears out all error messages.
-	 */
-	public function clear()
-	{
-		$this->errors = [];
-	}
+    /**
+     * Returns true if there are no error messages.
+     *
+     * @return bool
+     */
+    public function is_empty()
+    {
+        return empty($this->errors);
+    }
 
-	/**
-	 * Returns the number of error messages there are.
-	 * @return int
-	 */
-	public function size()
-	{
-		if ($this->is_empty())
-			return 0;
+    /**
+     * Clears out all error messages.
+     */
+    public function clear()
+    {
+        $this->errors = [];
+    }
 
-		$count = 0;
+    /**
+     * Returns the number of error messages there are.
+     *
+     * @return int
+     */
+    public function size()
+    {
+        if ($this->is_empty()) {
+            return 0;
+        }
 
-		foreach ($this->errors as $error)
-			$count += count($error);
+        $count = 0;
 
-		return $count;
-	}
+        foreach ($this->errors as $error) {
+            $count += count($error);
+        }
 
-	/**
-	 * Returns an iterator to the error messages.
-	 *
-	 * This will allow you to iterate over the {@link Errors} object using foreach.
-	 *
-	 * <code>
-	 * foreach ($model->errors as $msg)
-	 *   echo "$msg\n";
-	 * </code>
-	 */
-	public function getIterator(): Traversable
-	{
-		return new ArrayIterator($this->full_messages());
-	}
+        return $count;
+    }
+
+    /**
+     * Returns an iterator to the error messages.
+     *
+     * This will allow you to iterate over the {@link Errors} object using foreach.
+     *
+     * <code>
+     * foreach ($model->errors as $msg)
+     *   echo "$msg\n";
+     * </code>
+     */
+    public function getIterator(): Traversable
+    {
+        return new ArrayIterator($this->full_messages());
+    }
 }

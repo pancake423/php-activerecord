@@ -7,18 +7,19 @@ namespace ActiveRecord;
  */
 class MysqlAdapter extends Connection
 {
-    static $DEFAULT_PORT = 3306;
+    public static $DEFAULT_PORT = 3306;
 
     public function limit($sql, $offset, $limit)
     {
-        $offset = is_null($offset) ? "" : intval($offset) . ",";
+        $offset = $offset === null ? "" : intval($offset) . ",";
         $limit = intval($limit);
-        return "$sql LIMIT {$offset}$limit";
+
+        return "{$sql} LIMIT {$offset}$limit";
     }
 
     public function query_column_info($table)
     {
-        return $this->query("SHOW COLUMNS FROM $table");
+        return $this->query("SHOW COLUMNS FROM {$table}");
     }
 
     public function query_for_tables()
@@ -81,7 +82,8 @@ class MysqlAdapter extends Connection
     public function native_database_types()
     {
         return [
-            "primary_key" => "int(11) UNSIGNED DEFAULT NULL auto_increment PRIMARY KEY",
+            "primary_key" =>
+                "int(11) UNSIGNED DEFAULT NULL auto_increment PRIMARY KEY",
             "string" => [
                 "name" => "varchar",
                 "length" => 255,
@@ -118,4 +120,3 @@ class MysqlAdapter extends Connection
         ];
     }
 }
-?>

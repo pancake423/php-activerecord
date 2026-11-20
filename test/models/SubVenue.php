@@ -2,6 +2,5 @@
 
 class SubVenue extends Venue
 {
-	static $table_name = 'venues';
+    public static $table_name = 'venues';
 }
-?>

@@ -1,39 +1,44 @@
 <?php
 
-class Venue extends ActiveRecord\Model
+use ActiveRecord\Model;
+
+class Venue extends Model
 {
-	static $use_custom_get_state_getter = false;
+    public static $use_custom_get_state_getter = false;
 
-	static $use_custom_set_state_setter = false;	
+    public static $use_custom_set_state_setter = false;
 
-	static $has_many = [
-	    'events',
-	    [
-	        'hosts',
-	        'through' => 'events',
-	    ],
-	];
+    public static $has_many = [
+        'events',
+        [
+            'hosts',
+            'through' => 'events',
+        ],
+    ];
 
-	static $has_one;
+    public static $has_one;
 
-	static $alias_attribute = [
-	    'marquee' => 'name',
-	    'mycity' => 'city',
-	];
+    public static $alias_attribute = [
+        'marquee' => 'name',
+        'mycity' => 'city',
+    ];
 
-	public function get_state()
-	{
-		if (self::$use_custom_get_state_getter)
-			return strtolower($this->read_attribute('state'));
-		else return $this->read_attribute('state');
-	}
+    public function get_state()
+    {
+        if (self::$use_custom_get_state_getter) {
+            return strtolower($this->read_attribute('state'));
+        } else {
+            return $this->read_attribute('state');
+        }
+    }
 
-	public function set_state($value)
-	{
-		if (self::$use_custom_set_state_setter)
-			return $this->assign_attribute('state', $value . '#');
-		else return $this->assign_attribute('state', $value);
-	}
+    public function set_state($value)
+    {
+        if (self::$use_custom_set_state_setter) {
+            return $this->assign_attribute('state', $value.'#');
+        } else {
+            return $this->assign_attribute('state', $value);
+        }
+    }
 
 };
-?>

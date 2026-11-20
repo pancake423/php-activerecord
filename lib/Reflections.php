@@ -1,6 +1,7 @@
 <?php
 
 namespace ActiveRecord;
+
 use ReflectionClass;
 
 /**
@@ -8,72 +9,77 @@ use ReflectionClass;
  */
 class Reflections extends Singleton
 {
-	/**
-	 * Current reflections.
-	 *
-	 * @var array
-	 */
-	private $reflections = [];
+    /**
+     * Current reflections.
+     *
+     * @var array
+     */
+    private $reflections = [];
 
-	/**
-	 * Instantiates a new ReflectionClass for the given class.
-	 *
-	 * @param string $class Name of a class
-	 * @return Reflections $this so you can chain calls like Reflections::instance()->add('class')->get()
-	 */
-	public function add($class = null)
-	{
-		$class = $this->get_class($class);
+    /**
+     * Instantiates a new ReflectionClass for the given class.
+     *
+     * @param  string  $class  Name of a class
+     * @return Reflections $this so you can chain calls like Reflections::instance()->add('class')->get()
+     */
+    public function add($class = null)
+    {
+        $class = $this->get_class($class);
 
-		$this->reflections[$class] ??= new ReflectionClass($class);
+        $this->reflections[$class] ??= new ReflectionClass($class);
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Destroys the cached ReflectionClass.
-	 *
-	 * Put this here mainly for testing purposes.
-	 *
-	 * @param string $class Name of a class.
-	 */
-	public function destroy($class)
-	{
-		if (isset($this->reflections[$class]))
-			$this->reflections[$class] = null;
-	}
+    /**
+     * Destroys the cached ReflectionClass.
+     *
+     * Put this here mainly for testing purposes.
+     *
+     * @param  string  $class  Name of a class.
+     */
+    public function destroy($class)
+    {
+        if (isset($this->reflections[$class])) {
+            $this->reflections[$class] = null;
+        }
+    }
 
-	/**
-	 * Get a cached ReflectionClass.
-	 *
-	 * @param string $class Optional name of a class
-	 * @return mixed null or a ReflectionClass instance
-	 * @throws ActiveRecordException if class was not found
-	 */
-	public function get($class = null)
-	{
-		$class = $this->get_class($class);
+    /**
+     * Get a cached ReflectionClass.
+     *
+     * @param  string  $class  Optional name of a class
+     * @return mixed null or a ReflectionClass instance
+     *
+     * @throws ActiveRecordException if class was not found
+     */
+    public function get($class = null)
+    {
+        $class = $this->get_class($class);
 
-		if (isset($this->reflections[$class]))
-			return $this->reflections[$class];
+        if (isset($this->reflections[$class])) {
+            return $this->reflections[$class];
+        }
 
-		throw new ActiveRecordException("Class not found: $class");
-	}
+        throw new ActiveRecordException("Class not found: {$class}");
+    }
 
-	/**
-	 * Retrieve a class name to be reflected.
-	 *
-	 * @param mixed $mixed An object or name of a class
-	 * @return string
-	 */
-	private function get_class($mixed = null)
-	{
-		if (is_object($mixed))
-			return $mixed::class;
+    /**
+     * Retrieve a class name to be reflected.
+     *
+     * @param  mixed  $mixed  An object or name of a class
+     * @return string
+     */
+    private function get_class($mixed = null)
+    {
+        if (is_object($mixed)) {
+            return $mixed::class;
+        }
 
-		if (! is_null($mixed))
-			return $mixed;
+        if ($mixed !== null) {
+            return $mixed;
+        }
 
-		return $this->get_called_class();
-	}
+        return $this->get_called_class();
+    }
 }

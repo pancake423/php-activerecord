@@ -2,32 +2,34 @@
 
 namespace NamespaceTest;
 
-class Book extends \ActiveRecord\Model
-{
-	static $belongs_to = [
-	    [
-	        'parent_book',
-	        'class_name' => \NamespaceTest\Book::class,
-	    ],
-	    [
-	        'parent_book_2',
-	        'class_name' => 'Book',
-	    ],
-	    [
-	        'parent_book_3',
-	        'class_name' => '\Book',
-	    ],
-	];
+use ActiveRecord\Model;
+use NamespaceTest\SubNamespaceTest\Page;
 
-	static $has_many = [
-	    [
-	        'pages',
-	        'class_name' => \NamespaceTest\SubNamespaceTest\Page::class,
-	    ],
-	    [
-	        'pages_2',
-	        'class_name' => 'SubNamespaceTest\Page',
-	    ],
-	];
+class Book extends Model
+{
+    public static $belongs_to = [
+        [
+            'parent_book',
+            'class_name' => self::class,
+        ],
+        [
+            'parent_book_2',
+            'class_name' => 'Book',
+        ],
+        [
+            'parent_book_3',
+            'class_name' => '\Book',
+        ],
+    ];
+
+    public static $has_many = [
+        [
+            'pages',
+            'class_name' => Page::class,
+        ],
+        [
+            'pages_2',
+            'class_name' => 'SubNamespaceTest\Page',
+        ],
+    ];
 }
-?>
