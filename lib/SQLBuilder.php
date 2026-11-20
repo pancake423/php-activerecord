@@ -240,7 +240,7 @@ class SQLBuilder implements \Stringable
         }
 
         $parts = preg_split('/(_and_|_or_)/i', $name, -1, PREG_SPLIT_DELIM_CAPTURE);
-        $num_values = count($values);
+        $num_values = count($values ?? []);
         $conditions = [''];
 
         for ($i = 0,$j = 0,$n = count($parts); $i < $n; $i += 2,++$j) {
@@ -413,7 +413,7 @@ class SQLBuilder implements \Stringable
 
     private function build_update()
     {
-        if ($this->update === null || strlen($this->update) > 0) {
+        if ($this->update !== null && strlen($this->update) > 0) {
             $set = $this->update;
         } else {
             $set = implode('=?, ', $this->quoted_key_names()).'=?';

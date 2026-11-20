@@ -28,6 +28,13 @@ abstract class Connection
     public $last_query;
 
     /**
+     * The last values passed to a prepared query.
+     *
+     * @var mixed[]
+     */
+    public $last_values = [];
+
+    /**
      * Switch for logging.
      *
      * @var bool
@@ -349,6 +356,7 @@ abstract class Connection
         }
 
         $this->last_query = $sql;
+        $this->last_values = $values;
 
         if ($this->ensure_connection) {
             $this->reconnect_if_gone();
@@ -369,7 +377,7 @@ abstract class Connection
                 throw new DatabaseException($this);
             }
         } catch (PDOException $e) {
-            throw new DatabaseException($e);
+            throw new DatabaseException($this);
         }
 
         return $sth;

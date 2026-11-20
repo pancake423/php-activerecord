@@ -22,25 +22,41 @@ class DatabaseException extends ActiveRecordException
     public function __construct($adapter_or_string_or_mystery)
     {
         if ($adapter_or_string_or_mystery instanceof Connection) {
-            parent::__construct(
-                implode(', ', $adapter_or_string_or_mystery->connection->errorInfo()),
-                intval($adapter_or_string_or_mystery->connection->errorCode())
-            );
+            $error_info = $adapter_or_string_or_mystery->connection->errorInfo();
+            $error_code = $adapter_or_string_or_mystery->connection->errorCode();
+            $error_message = "Database error $error_info, $error_code.";
+            try {
+                if ($adapter_or_string_or_mystery->last_query) {
+                    $error_message .= " Last SQL query: {$adapter_or_string_or_mystery->last_query}";
+                }
+                if ($adapter_or_string_or_mystery->last_values) {
+                    $error_message .=
+                        " Last bound parameters: " .
+                        implode(", ", $adapter_or_string_or_mystery->last_values);
+                }
+            } catch (\Exception $e) {
+                // don't throw an error while trying to build our error message :)
+                $error_message .= " (Unable to retrieve last query/parameters)";
+            }
+            parent::__construct($error_message);
         } elseif ($adapter_or_string_or_mystery instanceof \PDOStatement) {
             parent::__construct(
-                implode(', ', $adapter_or_string_or_mystery->errorInfo()),
-                intval($adapter_or_string_or_mystery->errorCode())
+                implode(", ", $adapter_or_string_or_mystery->errorInfo()),
+                intval($adapter_or_string_or_mystery->errorCode()),
             );
         } elseif ($adapter_or_string_or_mystery instanceof \PDOException) {
             if ($adapter_or_string_or_mystery->errorInfo) {
-                $message = implode(', ', $adapter_or_string_or_mystery->errorInfo);
+                $message = implode(
+                    ", ",
+                    $adapter_or_string_or_mystery->errorInfo,
+                );
             } else {
                 $message = $adapter_or_string_or_mystery->getMessage();
             }
             parent::__construct(
                 $message,
                 intval($adapter_or_string_or_mystery->getCode()),
-                $adapter_or_string_or_mystery
+                $adapter_or_string_or_mystery,
             );
         } else {
             parent::__construct($adapter_or_string_or_mystery);
