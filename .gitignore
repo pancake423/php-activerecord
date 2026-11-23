@@ -5,7 +5,6 @@
 *.db
 *.swp
 vendor/*
-composer.lock
 phpunit.xml
 nbproject/
 .phpunit.result.cache
