@@ -23,7 +23,6 @@ class DatabaseException extends ActiveRecordException
     {
         if ($adapter_or_string_or_mystery instanceof Connection) {
             $error_message = join(",", $adapter_or_string_or_mystery->connection->errorInfo());
-            $error_code = $adapter_or_string_or_mystery->connection->errorCode();
             try {
                 if ($adapter_or_string_or_mystery->last_query) {
                     $error_message .= "\n Last SQL query: {$adapter_or_string_or_mystery->last_query}";
@@ -37,7 +36,7 @@ class DatabaseException extends ActiveRecordException
                 // don't throw an error while trying to build our error message :)
                 $error_message .= " (Unable to retrieve last query/parameters)";
             }
-            parent::__construct($error_message, $error_code);
+            parent::__construct($error_message);
         } elseif ($adapter_or_string_or_mystery instanceof \PDOStatement) {
             parent::__construct(
                 implode(", ", $adapter_or_string_or_mystery->errorInfo()),

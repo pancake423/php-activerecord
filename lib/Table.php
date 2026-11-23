@@ -146,7 +146,11 @@ class Table
                     // if there is more than 1 join for a given table we need to alias the table names
                     if (array_key_exists($rel->class_name, $existing_tables)) {
                         $alias = $value;
-                        $existing_tables[$rel->class_name]++;
+                        // why does this code try to increment a boolean?
+                        // better not to ask
+                        if (!is_bool($existing_tables[$rel->class_name])) {
+                            $existing_tables[$rel->class_name]++;
+                        }
                     } else {
                         $existing_tables[$rel->class_name] = true;
                         $alias = null;

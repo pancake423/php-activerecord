@@ -203,7 +203,7 @@ class SQLBuilder implements \Stringable
      */
     public static function reverse_order($order)
     {
-        if (! trim($order)) {
+        if (! trim($order ?? "")) {
             return $order;
         }
 

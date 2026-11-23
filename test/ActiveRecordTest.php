@@ -9,6 +9,8 @@ use ActiveRecord\UndefinedPropertyException;
 
 class ActiveRecordTest extends DatabaseTestCase
 {
+    protected $options;
+
     public function set_up($connection_name = null)
     {
         parent::set_up($connection_name);
@@ -221,18 +223,18 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_auto_load_with_namespaced_model()
     {
-        $this->assert_true(class_exists(NamespaceTest\Book::class));
+        $this->assert_true(class_exists(\NamespaceTest\Book::class));
     }
 
     public function test_namespace_gets_stripped_from_table_name()
     {
-        $model = new NamespaceTest\Book();
+        $model = new \NamespaceTest\Book();
         $this->assert_equals('books', $model->table()->table);
     }
 
     public function test_namespace_gets_stripped_from_inferred_foreign_key()
     {
-        $model = new NamespaceTest\Book();
+        $model = new \NamespaceTest\Book();
         $table = Table::load($model::class);
 
         $this->assert_equals(
@@ -251,7 +253,7 @@ class ActiveRecordTest extends DatabaseTestCase
 
     public function test_namespaced_relationship_associates_correctly()
     {
-        $model = new NamespaceTest\Book();
+        $model = new \NamespaceTest\Book();
         $table = Table::load($model::class);
 
         $this->assert_not_null($table->get_relationship('parent_book'));

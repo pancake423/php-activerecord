@@ -18,7 +18,6 @@ class ConnectionManagerTest extends DatabaseTestCase
     public function test_get_connection_uses_existing_object()
     {
         $a = ConnectionManager::get_connection('mysql');
-        $a->harro = 'harro there';
 
         $this->assert_same($a, ConnectionManager::get_connection('mysql'));
     }

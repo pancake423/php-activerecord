@@ -2,6 +2,9 @@
 
 class ModelCallbackTest extends DatabaseTestCase
 {
+    protected $venue;
+    protected $callback;
+
     public function set_up($connection_name = null)
     {
         parent::set_up($connection_name);
@@ -58,7 +61,7 @@ return $return;
 
     public function test_after_construct_fires_by_default()
     {
-        $this->assert_fires('after_construct', function ($model): void {
+        $this->assert_fires(['after_construct'], function ($model): void {
             new Venue();
         });
     }

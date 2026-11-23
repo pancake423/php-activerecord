@@ -38,7 +38,7 @@ abstract class AbstractRelationship implements InterfaceRelationship
     /**
      * Name of the foreign key.
      *
-     * @var string
+     * @var string[]
      */
     public $foreign_key = [];
 
@@ -487,6 +487,10 @@ class HasMany extends AbstractRelationship
 
     private $through;
 
+    protected $primary_key;
+
+    private $initialized;
+
     /**
      * Constructs a {@link HasMany} relationship.
      *
@@ -722,6 +726,8 @@ class BelongsTo extends AbstractRelationship
 {
     protected static $valid_association_options = ['primary_key'];
 
+    public $primary_key;
+
     public function __construct($options = [])
     {
         parent::__construct($options);
@@ -735,8 +741,18 @@ class BelongsTo extends AbstractRelationship
             $this->foreign_key = [Inflector::instance()->keyify($this->class_name)];
         }
 
-        if (! isset($this->primary_key) && isset($this->options['primary_key'])) {
+        if (isset($this->options['primary_key'])) {
             $this->primary_key = is_array($this->options['primary_key']) ? $this->options['primary_key'] : [$this->options['primary_key']];
+        }
+
+        // stupid dumb hack to fix a problem that I don't understand.
+        // for some reason, defining $primary key results in the value being null
+        // rather than unset, which apparently ruins everything.
+        //
+        // this lets me fix the deprecation without ActiveRecord completely
+        // sharting itself.
+        if ($this->primary_key === null) {
+            unset($this->primary_key);
         }
     }
 

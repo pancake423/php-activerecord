@@ -4,8 +4,10 @@ use ActiveRecord\ActiveRecordException;
 use ActiveRecord\CallBack;
 use ActiveRecord\Table;
 
-class CallBackTest extends DatabaseTestCase
+class CallbackTest extends DatabaseTestCase
 {
+    protected $callback;
+
     public function set_up($connection_name = null)
     {
         parent::set_up($connection_name);
@@ -199,7 +201,7 @@ class CallBackTest extends DatabaseTestCase
     public function test_invoke_unregistered_callback()
     {
         $this->expectException(ActiveRecordException::class);
-        $mock = $this->createMock('VenueCB', ['columns']);
+        $mock = $this->createStub('VenueCB', ['columns']);
         $this->callback->invoke($mock, 'before_validation_on_create');
     }
 

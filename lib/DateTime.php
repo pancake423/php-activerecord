@@ -30,33 +30,35 @@ namespace ActiveRecord;
  *
  * @see http://php.net/manual/en/class.datetime.php
  */
-class DateTime extends \DateTime implements \Stringable, DateTimeLinkedModelInterface
+class DateTime extends \DateTime implements
+    \Stringable,
+    DateTimeLinkedModelInterface
 {
     /**
      * Default format used for format() and __toString()
      */
-    public static $DEFAULT_FORMAT = 'rfc2822';
+    public static $DEFAULT_FORMAT = "rfc2822";
 
     /**
      * Pre-defined format strings.
      */
     public static $FORMATS = [
-        'db' => 'Y-m-d H:i:s',
-        'number' => 'YmdHis',
-        'time' => 'H:i',
-        'short' => 'd M H:i',
-        'long' => 'F d, Y H:i',
-        'atom' => \DateTime::ATOM,
-        'cookie' => \DateTime::COOKIE,
-        'iso8601' => \DateTime::ISO8601,
-        'rfc822' => \DateTime::RFC822,
-        'rfc850' => \DateTime::RFC850,
-        'rfc1036' => \DateTime::RFC1036,
-        'rfc1123' => \DateTime::RFC1123,
-        'rfc2822' => \DateTime::RFC2822,
-        'rfc3339' => \DateTime::RFC3339,
-        'rss' => \DateTime::RSS,
-        'w3c' => \DateTime::W3C,
+        "db" => "Y-m-d H:i:s",
+        "number" => "YmdHis",
+        "time" => "H:i",
+        "short" => "d M H:i",
+        "long" => "F d, Y H:i",
+        "atom" => \DateTime::ATOM,
+        "cookie" => \DateTime::COOKIE,
+        "iso8601" => \DateTime::ISO8601,
+        "rfc822" => \DateTime::RFC822,
+        "rfc850" => \DateTime::RFC850,
+        "rfc1036" => \DateTime::RFC1036,
+        "rfc1123" => \DateTime::RFC1123,
+        "rfc2822" => \DateTime::RFC2822,
+        "rfc3339" => \DateTime::RFC3339,
+        "rss" => \DateTime::RSS,
+        "w3c" => \DateTime::W3C,
     ];
 
     private $model;
@@ -103,7 +105,7 @@ class DateTime extends \DateTime implements \Stringable, DateTimeLinkedModelInte
     public static function get_format($format = null)
     {
         // use default format if no format specified
-        if (! $format) {
+        if (!$format) {
             $format = self::$DEFAULT_FORMAT;
         }
 
@@ -116,31 +118,6 @@ class DateTime extends \DateTime implements \Stringable, DateTimeLinkedModelInte
         return $format;
     }
 
-    /**
-     * This needs to be overriden so it returns an instance of this class instead of PHP's \DateTime.
-     * See http://php.net/manual/en/datetime.createfromformat.php
-     *
-     * This method will break in PHP9. I don't think there is a clean fix, but I also don't think it's a
-     * problem because we use a custom Date class in core.
-     */
-    #[\ReturnTypeWillChange()]
-    public static function createFromFormat(
-        $format,
-        $time,
-        $tz = null,
-    ): self|bool {
-        $phpDate = $tz
-            ? parent::createFromFormat($format, $time, $tz)
-            : parent::createFromFormat($format, $time);
-        if (! $phpDate) {
-            return false;
-        }
-        // convert to this class using the timestamp
-        $ourDate = new static();
-        $ourDate->setTimestamp($phpDate->getTimestamp());
-
-        return $ourDate;
-    }
 
     public function __toString(): string
     {
@@ -157,7 +134,7 @@ class DateTime extends \DateTime implements \Stringable, DateTimeLinkedModelInte
     public function setDate($year, $month, $day): self
     {
         $this->flag_dirty();
-        call_user_func_array([$this, 'parent::setDate'], func_get_args());
+        parent::setDate(...func_get_args());
 
         return $this;
     }
@@ -165,7 +142,7 @@ class DateTime extends \DateTime implements \Stringable, DateTimeLinkedModelInte
     public function setISODate($year, $week, $day = null): self
     {
         $this->flag_dirty();
-        call_user_func_array([$this, 'parent::setISODate'], func_get_args());
+        parent::setISODate(...func_get_args());
 
         return $this;
     }
@@ -177,7 +154,7 @@ class DateTime extends \DateTime implements \Stringable, DateTimeLinkedModelInte
         $microsecond = null,
     ): self {
         $this->flag_dirty();
-        call_user_func_array([$this, 'parent::setTime'], func_get_args());
+        parent::setTime(...func_get_args());
 
         return $this;
     }
@@ -185,7 +162,7 @@ class DateTime extends \DateTime implements \Stringable, DateTimeLinkedModelInte
     public function setTimestamp($unixtimestamp): self
     {
         $this->flag_dirty();
-        parent::setTimestamp(...);
+        parent::setTimestamp(...func_get_args());
 
         return $this;
     }
