@@ -247,24 +247,27 @@ class Model
      * @param  bool  $guard_attributes  Set to true to guard protected/non-accessible attributes
      * @param  bool  $instantiating_via_find  Set to true if this model is being created from a find call
      * @param  bool  $__new_record  Set to true if this should be considered a new record
-     * @return Model
+     * @return static
      */
     public function __construct(
         array $attributes = [],
         $guard_attributes = true,
-        $instantiating_via_find = false, /**
-     * Flag that determines if a call to save() should issue an insert or an update sql statement
-     */
-        private $__new_record = true
+        $instantiating_via_find = false /**
+         * Flag that determines if a call to save() should issue an insert or an update sql statement
+         */,
+        private $__new_record = true,
     ) {
         // initialize attributes applying defaults
-        if (! $instantiating_via_find) {
+        if (!$instantiating_via_find) {
             foreach (static::table()->columns as $meta) {
                 $this->attributes[$meta->inflected_name] = $meta->default;
             }
         }
 
-        $this->set_attributes_via_mass_assignment($attributes, $guard_attributes);
+        $this->set_attributes_via_mass_assignment(
+            $attributes,
+            $guard_attributes,
+        );
 
         // since all attribute assignment now goes thru assign_attributes() we want to reset
         // dirty if instantiating via find since nothing is really dirty when doing that
@@ -272,7 +275,7 @@ class Model
             $this->__dirty = [];
         }
 
-        $this->invoke_callback('after_construct', false);
+        $this->invoke_callback("after_construct", false);
     }
 
     /**
@@ -348,10 +351,12 @@ class Model
      */
     public function __isset($attribute_name)
     {
-        if (array_key_exists($attribute_name, $this->attributes)
-            || array_key_exists($attribute_name, static::$alias_attribute)
-            || method_exists($this, "get_{$attribute_name}")
-            || array_key_exists($attribute_name, $this->__relationships)) {
+        if (
+            array_key_exists($attribute_name, $this->attributes) ||
+            array_key_exists($attribute_name, static::$alias_attribute) ||
+            method_exists($this, "get_{$attribute_name}") ||
+            array_key_exists($attribute_name, $this->__relationships)
+        ) {
             return true;
         }
 
@@ -429,23 +434,28 @@ class Model
             return $this->assign_attribute($name, $value);
         }
 
-        if ($name == 'id') {
-            return $this->assign_attribute($this->get_primary_key(true), $value);
+        if ($name == "id") {
+            return $this->assign_attribute(
+                $this->get_primary_key(true),
+                $value,
+            );
         }
 
         foreach (static::$delegate as &$item) {
-            if (($delegated_name = $this->is_delegated($name, $item))) {
-                return $this->{$item['to']}->{$delegated_name} = $value;
+            if ($delegated_name = $this->is_delegated($name, $item)) {
+                return $this->{$item["to"]}->{$delegated_name} = $value;
             }
         }
 
         $table = static::table();
-        if ($relationship = $table->get_relationship($name)
-        ) {
+        if ($relationship = $table->get_relationship($name)) {
             if ($value === null) {
                 $this->__relationships[$name] = $value;
 
-                return $this->assign_attribute($relationship->foreign_key[0], $value);
+                return $this->assign_attribute(
+                    $relationship->foreign_key[0],
+                    $value,
+                );
             }
             if (
                 is_object($value) &&
@@ -456,7 +466,7 @@ class Model
 
                 return $this->assign_attribute(
                     $relationship->foreign_key[0],
-                    $value->is_new_record() ? null : $value->{$pk[0]}
+                    $value->is_new_record() ? null : $value->{$pk[0]},
                 );
             } else {
                 throw new RelationshipException();
@@ -481,9 +491,12 @@ class Model
     public function assign_attribute($name, $value)
     {
         $table = static::table();
-        if (! is_object($value)) {
+        if (!is_object($value)) {
             if (array_key_exists($name, $table->columns)) {
-                $value = $table->columns[$name]->cast($value, static::connection());
+                $value = $table->columns[$name]->cast(
+                    $value,
+                    static::connection(),
+                );
             } else {
                 $col = $table->get_column_by_inflected_name($name);
                 if ($col !== null) {
@@ -493,10 +506,13 @@ class Model
         }
 
         // convert php's \DateTime to ours
-        if (is_object($value) && $value::class === 'DateTime') {
+        if (is_object($value) && $value::class === "DateTime") {
             $date_class = Config::instance()->get_date_class();
-            if ($date_class !== 'DateTime') {
-                $value = $date_class::createFromFormat('Y-m-d H:i:s T', $value->format('Y-m-d H:i:s T'));
+            if ($date_class !== "DateTime") {
+                $value = $date_class::createFromFormat(
+                    "Y-m-d H:i:s T",
+                    $value->format("Y-m-d H:i:s T"),
+                );
             }
         }
 
@@ -542,13 +558,13 @@ class Model
         $table = static::table();
 
         // this may be first access to the relationship so check Table
-        if (($relationship = $table->get_relationship($name))) {
+        if ($relationship = $table->get_relationship($name)) {
             $this->__relationships[$name] = $relationship->load($this);
 
             return $this->__relationships[$name];
         }
 
-        if ($name == 'id') {
+        if ($name == "id") {
             $pk = $this->get_primary_key(true);
             if (isset($this->attributes[$pk])) {
                 return $this->attributes[$pk];
@@ -559,8 +575,8 @@ class Model
         $null = null;
 
         foreach (static::$delegate as &$item) {
-            if (($delegated_name = $this->is_delegated($name, $item))) {
-                $to = $item['to'];
+            if ($delegated_name = $this->is_delegated($name, $item)) {
+                $to = $item["to"];
                 if ($this->{$to}) {
                     $val = &$this->{$to}->__get($delegated_name);
 
@@ -581,7 +597,7 @@ class Model
      */
     public function flag_dirty($name)
     {
-        if (! $this->__dirty) {
+        if (!$this->__dirty) {
             $this->__dirty = [];
         }
 
@@ -595,13 +611,13 @@ class Model
      */
     public function dirty_attributes()
     {
-        if (! $this->__dirty) {
+        if (!$this->__dirty) {
             return null;
         }
 
         $dirty = array_intersect_key($this->attributes, $this->__dirty);
 
-        return ! empty($dirty) ? $dirty : null;
+        return !empty($dirty) ? $dirty : null;
     }
 
     /**
@@ -612,7 +628,9 @@ class Model
      */
     public function attribute_is_dirty($attribute)
     {
-        return $this->__dirty && isset($this->__dirty[$attribute]) && array_key_exists($attribute, $this->attributes);
+        return $this->__dirty &&
+            isset($this->__dirty[$attribute]) &&
+            array_key_exists($attribute, $this->attributes);
     }
 
     /**
@@ -677,7 +695,7 @@ class Model
      */
     public function get_validation_rules()
     {
-        require_once 'Validations.php';
+        require_once "Validations.php";
 
         $validator = new Validations($this);
 
@@ -719,15 +737,23 @@ class Model
      *
      * @param  string  $name  Name of an attribute
      * @param  array  $delegate  An array containing delegate data
-     * @return delegated attribute name or null
+     * @return ?string
      */
     private function is_delegated($name, &$delegate)
     {
-        if (is_array($delegate) && array_key_exists('prefix', $delegate) && $delegate['prefix'] != '') {
-            $name = substr($name, strlen($delegate['prefix']) + 1);
+        if (
+            is_array($delegate) &&
+            array_key_exists("prefix", $delegate) &&
+            $delegate["prefix"] != ""
+        ) {
+            $name = substr($name, strlen($delegate["prefix"]) + 1);
         }
 
-        if (is_array($delegate) && array_key_exists('prefix', $delegate) && in_array($name, $delegate['delegate'])) {
+        if (
+            is_array($delegate) &&
+            array_key_exists("prefix", $delegate) &&
+            in_array($name, $delegate["delegate"])
+        ) {
             return $name;
         }
 
@@ -816,10 +842,13 @@ class Model
      * @param  array  $attributes  Array of the models attributes
      * @param  bool  $validate  True if the validators should be run
      * @param  bool  $guard_attributes  Set to true to guard protected/non-accessible attributes
-     * @return Model
+     * @return static
      */
-    public static function create($attributes = [], $validate = true, $guard_attributes = true)
-    {
+    public static function create(
+        $attributes = [],
+        $validate = true,
+        $guard_attributes = true,
+    ) {
         $class_name = static::class;
         $model = new $class_name($attributes, $guard_attributes);
         $model->save($validate);
@@ -841,9 +870,11 @@ class Model
      */
     public function save($validate = true)
     {
-        $this->verify_not_readonly('save');
+        $this->verify_not_readonly("save");
 
-        return $this->is_new_record() ? $this->insert($validate) : $this->update($validate);
+        return $this->is_new_record()
+            ? $this->insert($validate)
+            : $this->update($validate);
     }
 
     /**
@@ -856,25 +887,30 @@ class Model
      */
     private function insert($validate = true)
     {
-        $this->verify_not_readonly('insert');
+        $this->verify_not_readonly("insert");
 
-        if (($validate && ! $this->_validate() || ! $this->invoke_callback('before_create', false))) {
+        if (
+            ($validate && !$this->_validate()) ||
+            !$this->invoke_callback("before_create", false)
+        ) {
             return false;
         }
 
         $table = static::table();
 
-        if (! ($attributes = $this->dirty_attributes())) {
+        if (!($attributes = $this->dirty_attributes())) {
             $attributes = $this->attributes;
         }
 
         $pk = $this->get_primary_key(true);
         $use_sequence = false;
 
-        if ($table->sequence && ! isset($attributes[$pk])) {
+        if ($table->sequence && !isset($attributes[$pk])) {
             if (($conn = static::connection()) instanceof OciAdapter) {
                 // terrible oracle makes us select the nextval first
-                $attributes[$pk] = $conn->get_next_sequence_value($table->sequence);
+                $attributes[$pk] = $conn->get_next_sequence_value(
+                    $table->sequence,
+                );
                 $table->insert($attributes);
                 $this->attributes[$pk] = $attributes[$pk];
             } else {
@@ -897,12 +933,13 @@ class Model
         $column = $table->get_column_by_inflected_name($pk);
 
         if ($column->auto_increment || $use_sequence) {
-            $this->attributes[$pk] = static::connection()->insert_id($table->sequence);
+            $this->attributes[$pk] = static::connection()->insert_id(
+                $table->sequence,
+            );
         }
 
-
         $this->__new_record = false;
-        $this->invoke_callback('after_create', false);
+        $this->invoke_callback("after_create", false);
 
         $this->update_cache();
 
@@ -919,9 +956,9 @@ class Model
      */
     private function update($validate = true)
     {
-        $this->verify_not_readonly('update');
+        $this->verify_not_readonly("update");
 
-        if ($validate && ! $this->_validate()) {
+        if ($validate && !$this->_validate()) {
             return false;
         }
 
@@ -929,16 +966,19 @@ class Model
             $pk = $this->values_for_pk();
 
             if (empty($pk)) {
-                throw new ActiveRecordException('Cannot update, no primary key defined for: '.static::class);
+                throw new ActiveRecordException(
+                    "Cannot update, no primary key defined for: " .
+                        static::class,
+                );
             }
 
-            if (! $this->invoke_callback('before_update', false)) {
+            if (!$this->invoke_callback("before_update", false)) {
                 return false;
             }
 
             $dirty = $this->dirty_attributes();
             static::table()->update($dirty, $pk);
-            $this->invoke_callback('after_update', false);
+            $this->invoke_callback("after_update", false);
             $this->update_cache();
         }
 
@@ -1000,24 +1040,24 @@ class Model
         $conn = static::connection();
         $sql = new SQLBuilder($conn, $table->get_fully_qualified_table_name());
 
-        $conditions = is_array($options) ? $options['conditions'] : $options;
+        $conditions = is_array($options) ? $options["conditions"] : $options;
 
-        if (is_array($conditions) && ! is_hash($conditions)) {
+        if (is_array($conditions) && !is_hash($conditions)) {
             call_user_func_array($sql->delete(...), $conditions);
         } else {
             $sql->delete($conditions);
         }
 
-        if (isset($options['limit'])) {
-            $sql->limit($options['limit']);
+        if (isset($options["limit"])) {
+            $sql->limit($options["limit"]);
         }
 
-        if (isset($options['order'])) {
-            $sql->order($options['order']);
+        if (isset($options["order"])) {
+            $sql->order($options["order"]);
         }
 
         $values = $sql->bind_values();
-        $ret = $conn->query(($table->last_sql = $sql->to_s()), $values);
+        $ret = $conn->query($table->last_sql = $sql->to_s(), $values);
 
         return $ret->rowCount();
     }
@@ -1057,29 +1097,31 @@ class Model
         $conn = static::connection();
         $sql = new SQLBuilder($conn, $table->get_fully_qualified_table_name());
 
-        $sql->update($options['set']);
+        $sql->update($options["set"]);
 
-        if (isset($options['conditions']) && ($conditions = $options['conditions'])) {
-            if (is_array($conditions) && ! is_hash($conditions)) {
+        if (
+            isset($options["conditions"]) &&
+            ($conditions = $options["conditions"])
+        ) {
+            if (is_array($conditions) && !is_hash($conditions)) {
                 call_user_func_array($sql->where(...), $conditions);
             } else {
                 $sql->where($conditions);
             }
         }
 
-        if (isset($options['limit'])) {
-            $sql->limit($options['limit']);
+        if (isset($options["limit"])) {
+            $sql->limit($options["limit"]);
         }
 
-        if (isset($options['order'])) {
-            $sql->order($options['order']);
+        if (isset($options["order"])) {
+            $sql->order($options["order"]);
         }
 
         $values = $sql->bind_values();
-        $ret = $conn->query(($table->last_sql = $sql->to_s()), $values);
+        $ret = $conn->query($table->last_sql = $sql->to_s(), $values);
 
         return $ret->rowCount();
-
     }
 
     /**
@@ -1089,20 +1131,22 @@ class Model
      */
     public function delete()
     {
-        $this->verify_not_readonly('delete');
+        $this->verify_not_readonly("delete");
 
         $pk = $this->values_for_pk();
 
         if (empty($pk)) {
-            throw new ActiveRecordException('Cannot delete, no primary key defined for: '.static::class);
+            throw new ActiveRecordException(
+                "Cannot delete, no primary key defined for: " . static::class,
+            );
         }
 
-        if (! $this->invoke_callback('before_destroy', false)) {
+        if (!$this->invoke_callback("before_destroy", false)) {
             return false;
         }
 
         static::table()->delete($pk);
-        $this->invoke_callback('after_destroy', false);
+        $this->invoke_callback("after_destroy", false);
         $this->remove_from_cache();
 
         return true;
@@ -1150,13 +1194,17 @@ class Model
      */
     private function _validate()
     {
-        require_once 'Validations.php';
+        require_once "Validations.php";
 
         $validator = new Validations($this);
-        $validation_on = 'validation_on_'.($this->is_new_record() ? 'create' : 'update');
+        $validation_on =
+            "validation_on_" . ($this->is_new_record() ? "create" : "update");
 
-        foreach (['before_validation', "before_{$validation_on}"] as $callback) {
-            if (! $this->invoke_callback($callback, false)) {
+        foreach (
+            ["before_validation", "before_{$validation_on}"]
+            as $callback
+        ) {
+            if (!$this->invoke_callback($callback, false)) {
                 return false;
             }
         }
@@ -1165,11 +1213,11 @@ class Model
         $this->errors = $validator->get_record();
         $validator->validate();
 
-        foreach (['after_validation', "after_{$validation_on}"] as $callback) {
+        foreach (["after_validation", "after_{$validation_on}"] as $callback) {
             $this->invoke_callback($callback, false);
         }
 
-        if (! $this->errors->is_empty()) {
+        if (!$this->errors->is_empty()) {
             return false;
         }
 
@@ -1207,7 +1255,7 @@ class Model
      */
     public function is_invalid()
     {
-        return ! $this->_validate();
+        return !$this->_validate();
     }
 
     /**
@@ -1215,7 +1263,7 @@ class Model
      */
     public function set_timestamps()
     {
-        $now = date('Y-m-d H:i:s');
+        $now = date("Y-m-d H:i:s");
 
         if (isset($this->updated_at)) {
             $this->updated_at = $now;
@@ -1276,13 +1324,15 @@ class Model
      *
      * @throws UndefinedPropertyException
      */
-    private function set_attributes_via_mass_assignment(array &$attributes, $guard_attributes)
-    {
+    private function set_attributes_via_mass_assignment(
+        array &$attributes,
+        $guard_attributes,
+    ) {
         // access uninflected columns since that is what we would have in result set
         $table = static::table();
         $exceptions = [];
-        $use_attr_accessible = ! empty(static::$attr_accessible);
-        $use_attr_protected = ! empty(static::$attr_protected);
+        $use_attr_accessible = !empty(static::$attr_accessible);
+        $use_attr_protected = !empty(static::$attr_protected);
         $connection = static::connection();
 
         foreach ($attributes as $name => $value) {
@@ -1293,11 +1343,17 @@ class Model
             }
 
             if ($guard_attributes) {
-                if ($use_attr_accessible && ! in_array($name, static::$attr_accessible)) {
+                if (
+                    $use_attr_accessible &&
+                    !in_array($name, static::$attr_accessible)
+                ) {
                     continue;
                 }
 
-                if ($use_attr_protected && in_array($name, static::$attr_protected)) {
+                if (
+                    $use_attr_protected &&
+                    in_array($name, static::$attr_protected)
+                ) {
                     continue;
                 }
 
@@ -1309,7 +1365,7 @@ class Model
                 }
             } else {
                 // ignore OciAdapter's limit() stuff
-                if ($name == 'ar_rnum__') {
+                if ($name == "ar_rnum__") {
                     continue;
                 }
 
@@ -1318,7 +1374,7 @@ class Model
             }
         }
 
-        if (! empty($exceptions)) {
+        if (!empty($exceptions)) {
             throw new UndefinedPropertyException(static::class, $exceptions);
         }
     }
@@ -1331,11 +1387,13 @@ class Model
      * @param  Model  $model
      * @param  $name  of relationship for this table
      */
-    public function set_relationship_from_eager_load(?self $model = null, $name = null)
-    {
+    public function set_relationship_from_eager_load(
+        ?self $model = null,
+        $name = null,
+    ) {
         $table = static::table();
 
-        if (($rel = $table->get_relationship($name))) {
+        if ($rel = $table->get_relationship($name)) {
             if ($rel->is_poly()) {
                 // if the related model is null and it is a poly then we should have an empty array
                 if ($model === null) {
@@ -1348,13 +1406,15 @@ class Model
             }
         }
 
-        throw new RelationshipException("Relationship named {$name} has not been declared for class: {$table->class->getName()}");
+        throw new RelationshipException(
+            "Relationship named {$name} has not been declared for class: {$table->class->getName()}",
+        );
     }
 
     /**
      * Reloads the attributes and relationships of this object from the database.
      *
-     * @return Model
+     * @return static
      */
     public function reload()
     {
@@ -1363,7 +1423,10 @@ class Model
         $this->__relationships = [];
         $pk = array_values($this->get_values_for($this->get_primary_key()));
 
-        $this->set_attributes_via_mass_assignment(static::find($pk)->attributes, false);
+        $this->set_attributes_via_mass_assignment(
+            static::find($pk)->attributes,
+            false,
+        );
         $this->reset_dirty();
 
         return $this;
@@ -1392,7 +1455,19 @@ class Model
      *
      * @var array
      */
-    public static $VALID_OPTIONS = ['conditions', 'limit', 'offset', 'order', 'select', 'joins', 'include', 'readonly', 'group', 'from', 'having'];
+    public static $VALID_OPTIONS = [
+        "conditions",
+        "limit",
+        "offset",
+        "order",
+        "select",
+        "joins",
+        "include",
+        "readonly",
+        "group",
+        "from",
+        "having",
+    ];
 
     /**
      * Enables the use of dynamic finders.
@@ -1429,7 +1504,7 @@ class Model
      *
      * @param  string  $method  Name of method
      * @param  mixed  $args  Method args
-     * @return Model
+     * @return static|int
      *
      * @throws {@link ActiveRecordException} if invalid query
      *
@@ -1440,35 +1515,64 @@ class Model
         $options = static::extract_and_validate_options($args);
         $create = false;
 
-        if (str_starts_with($method, 'find_or_create_by')) {
+        if (str_starts_with($method, "find_or_create_by")) {
             $attributes = substr($method, 17);
 
             // can't take any finders with OR in it when doing a find_or_create_by
-            if (str_contains($attributes, '_or_')) {
-                throw new ActiveRecordException("Cannot use OR'd attributes in find_or_create_by");
+            if (str_contains($attributes, "_or_")) {
+                throw new ActiveRecordException(
+                    "Cannot use OR'd attributes in find_or_create_by",
+                );
             }
 
             $create = true;
-            $method = 'find_by'.substr($method, 17);
+            $method = "find_by" . substr($method, 17);
         }
 
-        if (str_starts_with($method, 'find_by')) {
+        if (str_starts_with($method, "find_by")) {
             $attributes = substr($method, 8);
-            $options['conditions'] = SQLBuilder::create_conditions_from_underscored_string(static::connection(), $attributes, $args, static::$alias_attribute);
+            $options[
+                "conditions"
+            ] = SQLBuilder::create_conditions_from_underscored_string(
+                static::connection(),
+                $attributes,
+                $args,
+                static::$alias_attribute,
+            );
 
-            if (! ($ret = static::find('first', $options)) && $create) {
-                return static::create(SQLBuilder::create_hash_from_underscored_string($attributes, $args, static::$alias_attribute));
+            if (!($ret = static::find("first", $options)) && $create) {
+                return static::create(
+                    SQLBuilder::create_hash_from_underscored_string(
+                        $attributes,
+                        $args,
+                        static::$alias_attribute,
+                    ),
+                );
             }
 
             return $ret;
         }
-        if (str_starts_with($method, 'find_all_by')) {
-            $options['conditions'] = SQLBuilder::create_conditions_from_underscored_string(static::connection(), substr($method, 12), $args, static::$alias_attribute);
+        if (str_starts_with($method, "find_all_by")) {
+            $options[
+                "conditions"
+            ] = SQLBuilder::create_conditions_from_underscored_string(
+                static::connection(),
+                substr($method, 12),
+                $args,
+                static::$alias_attribute,
+            );
 
-            return static::find('all', $options);
+            return static::find("all", $options);
         }
-        if (str_starts_with($method, 'count_by')) {
-            $options['conditions'] = SQLBuilder::create_conditions_from_underscored_string(static::connection(), substr($method, 9), $args, static::$alias_attribute);
+        if (str_starts_with($method, "count_by")) {
+            $options[
+                "conditions"
+            ] = SQLBuilder::create_conditions_from_underscored_string(
+                static::connection(),
+                substr($method, 9),
+                $args,
+                static::$alias_attribute,
+            );
 
             return static::count($options);
         }
@@ -1486,17 +1590,21 @@ class Model
     public function __call($method, $args)
     {
         // check for build|create_association methods
-        if (preg_match('/(build|create)_/', $method)) {
-            if (! empty($args)) {
+        if (preg_match("/(build|create)_/", $method)) {
+            if (!empty($args)) {
                 $args = $args[0];
             }
 
-            $association_name = str_replace(['build_', 'create_'], '', $method);
-            $method = str_replace($association_name, 'association', $method);
+            $association_name = str_replace(["build_", "create_"], "", $method);
+            $method = str_replace($association_name, "association", $method);
             $table = static::table();
 
-            if (($association = $table->get_relationship($association_name)) ||
-                  ($association = $table->get_relationship(($association_name = Utils::pluralize($association_name))))) {
+            if (
+                ($association = $table->get_relationship($association_name)) ||
+                ($association = $table->get_relationship(
+                    $association_name = Utils::pluralize($association_name),
+                ))
+            ) {
                 // access association to ensure that the relationship has been loaded
                 // so that we do not double-up on records if we append a newly created
                 $this->{$association_name};
@@ -1517,7 +1625,10 @@ class Model
      */
     public static function all(/* ... */)
     {
-        return call_user_func_array(static::find(...), array_merge(['all'], func_get_args()));
+        return call_user_func_array(
+            static::find(...),
+            array_merge(["all"], func_get_args()),
+        );
     }
 
     /**
@@ -1535,13 +1646,16 @@ class Model
     {
         $args = func_get_args();
         $options = static::extract_and_validate_options($args);
-        $options['select'] = 'COUNT(*)';
+        $options["select"] = "COUNT(*)";
 
-        if (! empty($args) && $args[0] !== null && ! empty($args[0])) {
+        if (!empty($args) && $args[0] !== null && !empty($args[0])) {
             if (is_hash($args[0])) {
-                $options['conditions'] = $args[0];
+                $options["conditions"] = $args[0];
             } else {
-                $options['conditions'] = call_user_func_array(static::pk_conditions(...), $args);
+                $options["conditions"] = call_user_func_array(
+                    static::pk_conditions(...),
+                    $args,
+                );
             }
         }
 
@@ -1567,7 +1681,9 @@ class Model
      */
     public static function exists(/* ... */)
     {
-        return call_user_func_array(static::count(...), func_get_args()) > 0 ? true : false;
+        return call_user_func_array(static::count(...), func_get_args()) > 0
+            ? true
+            : false;
     }
 
     /**
@@ -1575,11 +1691,14 @@ class Model
      *
      * @see find
      *
-     * @return Model The first matched record or null if not found
+     * @return static The first matched record or null if not found
      */
     public static function first(/* ... */)
     {
-        return call_user_func_array(static::find(...), array_merge(['first'], func_get_args()));
+        return call_user_func_array(
+            static::find(...),
+            array_merge(["first"], func_get_args()),
+        );
     }
 
     /**
@@ -1587,11 +1706,14 @@ class Model
      *
      * @see find
      *
-     * @return Model The last matched record or null if not found
+     * @return static The last matched record or null if not found
      */
     public static function last(/* ... */)
     {
-        return call_user_func_array(static::find(...), array_merge(['last'], func_get_args()));
+        return call_user_func_array(
+            static::find(...),
+            array_merge(["last"], func_get_args()),
+        );
     }
 
     /**
@@ -1642,7 +1764,8 @@ class Model
      * <li><b>group:</b> A SQL group by fragment</li>
      * </ul>
      *
-     * @return mixed An array of records found if doing a find_all otherwise a
+     * @return ?static|static[]
+     * An array of records found if doing a find_all otherwise a
      *               single Model object or null if it wasn't found. NULL is only return when
      *               doing a first/last find. If doing an all find and no records matched this
      *               will return an empty array.
@@ -1662,25 +1785,31 @@ class Model
         $num_args = count($args);
         $single = true;
 
-        if ($num_args > 0 && ($args[0] === 'all' || $args[0] === 'first' || $args[0] === 'last')) {
+        if (
+            $num_args > 0 &&
+            ($args[0] === "all" || $args[0] === "first" || $args[0] === "last")
+        ) {
             switch ($args[0]) {
-                case 'all':
+                case "all":
                     $single = false;
                     break;
 
-                case 'last':
-                    if (! array_key_exists('order', $options)) {
-                        $options['order'] = implode(' DESC, ', static::table()->pk).' DESC';
+                case "last":
+                    if (!array_key_exists("order", $options)) {
+                        $options["order"] =
+                            implode(" DESC, ", static::table()->pk) . " DESC";
                     } else {
-                        $options['order'] = SQLBuilder::reverse_order($options['order']);
+                        $options["order"] = SQLBuilder::reverse_order(
+                            $options["order"],
+                        );
                     }
 
-                    // fall thru
+                // fall thru
 
-                    // no break
-                case 'first':
-                    $options['limit'] = 1;
-                    $options['offset'] = 0;
+                // no break
+                case "first":
+                    $options["limit"] = 1;
+                    $options["offset"] = 0;
                     break;
             }
 
@@ -1693,14 +1822,14 @@ class Model
         }
 
         // anything left in $args is a find by pk
-        if ($num_args > 0 && ! isset($options['conditions'])) {
+        if ($num_args > 0 && !isset($options["conditions"])) {
             return static::find_by_pk($args, $options);
         }
 
-        $options['mapped_names'] = static::$alias_attribute;
+        $options["mapped_names"] = static::$alias_attribute;
         $list = static::table()->find($options);
 
-        return $single ? (! empty($list) ? $list[0] : null) : $list;
+        return $single ? (!empty($list) ? $list[0] : null) : $list;
     }
 
     /**
@@ -1716,13 +1845,17 @@ class Model
 
         foreach ($pks as $pk) {
             $options = [
-                'conditions' => static::pk_conditions($pk),
+                "conditions" => static::pk_conditions($pk),
             ];
-            $models[] = Cache::get($table->cache_key_for_model($pk), function () use ($table, $options) {
-                $res = $table->find($options);
+            $models[] = Cache::get(
+                $table->cache_key_for_model($pk),
+                function () use ($table, $options) {
+                    $res = $table->find($options);
 
-                return $res ? $res[0] : null;
-            }, $table->cache_model_expire);
+                    return $res ? $res[0] : null;
+                },
+                $table->cache_model_expire,
+            );
         }
 
         return array_filter($models);
@@ -1733,7 +1866,7 @@ class Model
      *
      * @see find
      *
-     * @param  array  $values  An array containing values for the pk
+     * @param  ?array  $values  An array containing values for the pk
      * @param  array  $options  An options array
      * @return Model
      *
@@ -1742,7 +1875,9 @@ class Model
     public static function find_by_pk($values, $options)
     {
         if ($values === null) {
-            throw new RecordNotFound("Couldn't find ".static::class.' without an ID');
+            throw new RecordNotFound(
+                "Couldn't find " . static::class . " without an ID",
+            );
         }
 
         $table = static::table();
@@ -1751,7 +1886,7 @@ class Model
             $pks = is_array($values) ? $values : [$values];
             $list = static::get_models_from_cache($pks);
         } else {
-            $options['conditions'] = static::pk_conditions($values);
+            $options["conditions"] = static::pk_conditions($values);
             $list = $table->find($options);
         }
         $results = count($list);
@@ -1759,14 +1894,18 @@ class Model
         if ($results != ($expected = count((array) $values))) {
             $class = static::class;
             if (is_array($values)) {
-                $values = implode(',', $values);
+                $values = implode(",", $values);
             }
 
             if ($expected == 1) {
-                throw new RecordNotFound("Couldn't find {$class} with ID={$values}");
+                throw new RecordNotFound(
+                    "Couldn't find {$class} with ID={$values}",
+                );
             }
 
-            throw new RecordNotFound("Couldn't find all {$class} with IDs ({$values}) (found {$results}, but was looking for {$expected})");
+            throw new RecordNotFound(
+                "Couldn't find all {$class} with IDs ({$values}) (found {$results}, but was looking for {$expected})",
+            );
         }
 
         return $expected == 1 ? $list[0] : $list;
@@ -1816,13 +1955,15 @@ class Model
             $keys = array_keys($array);
             $diff = array_diff($keys, self::$VALID_OPTIONS);
 
-            if (! empty($diff) && $throw) {
-                throw new ActiveRecordException('Unknown key(s): '.implode(', ', $diff));
+            if (!empty($diff) && $throw) {
+                throw new ActiveRecordException(
+                    "Unknown key(s): " . implode(", ", $diff),
+                );
             }
 
             $intersect = array_intersect($keys, self::$VALID_OPTIONS);
 
-            if (! empty($intersect)) {
+            if (!empty($intersect)) {
                 return true;
             }
         }
@@ -1869,12 +2010,12 @@ class Model
                     $options = $last;
                 }
             } catch (ActiveRecordException $e) {
-                if (! is_hash($last)) {
+                if (!is_hash($last)) {
                     throw $e;
                 }
 
                 $options = [
-                    'conditions' => $last,
+                    "conditions" => $last,
                 ];
             }
         }
@@ -1892,7 +2033,7 @@ class Model
      */
     public function to_json(array $options = [])
     {
-        return $this->serialize('Json', $options);
+        return $this->serialize("Json", $options);
     }
 
     /**
@@ -1905,7 +2046,7 @@ class Model
      */
     public function to_xml(array $options = [])
     {
-        return $this->serialize('Xml', $options);
+        return $this->serialize("Xml", $options);
     }
 
     /**
@@ -1931,7 +2072,7 @@ class Model
      */
     public function to_csv(array $options = [])
     {
-        return $this->serialize('Csv', $options);
+        return $this->serialize("Csv", $options);
     }
 
     /**
@@ -1944,7 +2085,7 @@ class Model
      */
     public function to_array(array $options = [])
     {
-        return $this->serialize('Array', $options);
+        return $this->serialize("Array", $options);
     }
 
     /**
@@ -1966,7 +2107,7 @@ class Model
      */
     private function serialize($type, $options)
     {
-        require_once 'Serialization.php';
+        require_once "Serialization.php";
         $class = "ActiveRecord\\{$type}Serializer";
         $serializer = new $class($this, $options);
 
@@ -1982,7 +2123,11 @@ class Model
      */
     private function invoke_callback($method_name, $must_exist = true)
     {
-        return static::table()->callback->invoke($this, $method_name, $must_exist);
+        return static::table()->callback->invoke(
+            $this,
+            $method_name,
+            $must_exist,
+        );
     }
 
     /**

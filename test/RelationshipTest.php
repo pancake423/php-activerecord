@@ -163,6 +163,7 @@ class RelationshipTest extends DatabaseTestCase
     {
         $event = Event::create([
             'title' => 'venueless event',
+            'host_id' => 200, // host id must not be null
         ]);
         $this->assert_null($event->venue);
     }
@@ -680,7 +681,7 @@ class RelationshipTest extends DatabaseTestCase
     public function test_eager_loading_has_many_array_of_includes()
     {
         Author::$has_many = [['books'], ['awesome_people']];
-        $authors = Author::find([1, 2], [
+        $authors = Author::find([1, 4], [
             'include' => ['books', 'awesome_people'],
         ]);
 
